@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Supabase — replace with your actual URL and anon key
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ?? "",
   import.meta.env.VITE_SUPABASE_ANON_KEY ?? ""
@@ -14,267 +13,248 @@ const MINION_IMAGES = [
   { src: "/Mini-4.jpg", label: "Green Flame" },
 ];
 
-// Floating positions & animations (deterministic so no hydration issues)
-const FLOATERS = [
-  { x: 6,  y: 12, delay: 0,   dur: 6.2, rotate: -8  },
-  { x: 78, y: 8,  delay: 1.1, dur: 7.0, rotate: 6   },
-  { x: 55, y: 60, delay: 0.5, dur: 5.8, rotate: -4  },
-  { x: 18, y: 65, delay: 1.8, dur: 6.5, rotate: 10  },
+const INIT_POS = [
+  { x: 18, y: 10 },
+  { x: 72, y: 8  },
+  { x: 10, y: 62 },
+  { x: 68, y: 60 },
 ];
 
 const TASKS = [
-  {
-    id: "follow",
-    icon: "𝕏",
-    label: "Follow Minions",
-    desc: "Be the first to know",
-    href: "https://x.com/theminionxyz",
-  },
-  {
-    id: "like",
-    icon: "🔁",
-    label: "Like & Retweet",
-    desc: "Spread the minion wave",
-    href: "https://x.com/theminionxyz",
-  },
-  {
-    id: "comment",
-    icon: "💬",
-    label: "Comment & Tag 2 Frens",
-    desc: "More frens = more fun",
-    href: "https://x.com/theminionxyz",
-  },
+  { id: "follow",  label: "Follow Minions",        desc: "Be the first to know",    href: "https://x.com/theminionxyz" },
+  { id: "like",    label: "Like & Retweet",         desc: "Spread the minion wave",  href: "https://x.com/theminionxyz" },
+  { id: "comment", label: "Comment & Tag 2 Frens",  desc: "More frens = more fun",   href: "https://x.com/theminionxyz" },
 ];
 
-export default function Home() {
-  const [formOpen, setFormOpen] = useState(false);
-  const [wallet, setWallet] = useState("");
-  const [twitter, setTwitter] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
-  const [visible, setVisible] = useState(false);
-  const [tasksDone, setTasksDone] = useState<Record<string, boolean>>({});
+// ── Draggable minion ──────────────────────────────────────────
+function DraggableMinion({
+  img, label, initX, initY, bobDelay, bobDur,
+}: {
+  img: string; label: string; initX: number; initY: number;
+  bobDelay: number; bobDur: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const pos = useRef({ x: initX, y: initY });
+  const dragging = useRef(false);
+  const origin = useRef({ px: 0, py: 0, ex: 0, ey: 0 });
 
+  function applyPos() {
+    if (ref.current) {
+      ref.current.style.left = pos.current.x + "%";
+      ref.current.style.top  = pos.current.y + "%";
+    }
+  }
+
+  useEffect(() => { applyPos(); }, []);
+
+  function onPointerDown(e: React.PointerEvent) {
+    dragging.current = true;
+    origin.current = {
+      px: pos.current.x,
+      py: pos.current.y,
+      ex: e.clientX,
+      ey: e.clientY,
+    };
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    if (ref.current) ref.current.style.animation = "none";
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (!dragging.current) return;
+    const dx = ((e.clientX - origin.current.ex) / window.innerWidth)  * 100;
+    const dy = ((e.clientY - origin.current.ey) / window.innerHeight) * 100;
+    pos.current = {
+      x: Math.min(90, Math.max(0, origin.current.px + dx)),
+      y: Math.min(90, Math.max(0, origin.current.py + dy)),
+    };
+    applyPos();
+  }
+
+  function onPointerUp() {
+    dragging.current = false;
+    if (ref.current) ref.current.style.animation = "";
+  }
+
+  return (
+    <div
+      ref={ref}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      style={{
+        position: "fixed",
+        zIndex: 0,
+        cursor: "grab",
+        touchAction: "none",
+        userSelect: "none",
+        animation: `bob ${bobDur}s ease-in-out ${bobDelay}s infinite`,
+      }}
+    >
+      <img
+        src={img}
+        alt={label}
+        draggable={false}
+        style={{
+          width: "72px",
+          height: "72px",
+          borderRadius: "50%",
+          objectFit: "cover",
+          display: "block",
+          boxShadow: "0 4px 18px rgba(0,0,0,0.18)",
+          border: "2.5px solid rgba(255,255,255,0.7)",
+          pointerEvents: "none",
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────
+export default function Home() {
+  const [formOpen, setFormOpen]   = useState(false);
+  const [wallet,   setWallet]     = useState("");
+  const [twitter,  setTwitter]    = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted,  setSubmitted]  = useState(false);
+  const [error,    setError]      = useState("");
+  const [tasksDone, setTasksDone] = useState<Record<string, boolean>>({});
+  const [mounted,  setMounted]    = useState(false);
+
+  // Load tasks from localStorage on mount
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 80);
+    try {
+      const saved = localStorage.getItem("minions_tasks");
+      if (saved) setTasksDone(JSON.parse(saved));
+    } catch {}
+    const t = setTimeout(() => setMounted(true), 60);
     return () => clearTimeout(t);
   }, []);
 
+  // Persist tasks to localStorage
+  useEffect(() => {
+    if (mounted) localStorage.setItem("minions_tasks", JSON.stringify(tasksDone));
+  }, [tasksDone, mounted]);
+
+  function toggleTask(id: string) {
+    setTasksDone((p) => ({ ...p, [id]: !p[id] }));
+  }
+
   async function handleSubmit() {
-    if (!wallet.trim() || !twitter.trim()) {
-      setError("Fill in both fields.");
-      return;
-    }
+    if (!wallet.trim() || !twitter.trim()) { setError("Fill in both fields."); return; }
     setError("");
     setSubmitting(true);
     const { error: dbErr } = await supabase
       .from("minions")
       .insert([{ wallet: wallet.trim(), twitter: twitter.trim() }]);
     setSubmitting(false);
-    if (dbErr) {
-      setError("Something went wrong. Try again.");
-    } else {
-      setSubmitted(true);
-    }
+    if (dbErr) setError("Something went wrong. Try again.");
+    else setSubmitted(true);
   }
 
-  function toggleTask(id: string) {
-    setTasksDone((p) => ({ ...p, [id]: !p[id] }));
+  function closeForm() {
+    setFormOpen(false); setSubmitted(false); setWallet(""); setTwitter(""); setError("");
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #a8c8e8 0%, #b8d4ec 40%, #8fb8d8 100%)",
-        fontFamily: "'Segoe UI', Arial, sans-serif",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      {/* ── Floating Minion Characters ── */}
-      {MINION_IMAGES.map((m, i) => {
-        const f = FLOATERS[i];
-        return (
-          <div
-            key={m.src}
-            style={{
-              position: "fixed",
-              left: `${f.x}%`,
-              top: `${f.y}%`,
-              zIndex: 0,
-              animation: `floatBob${i} ${f.dur}s ease-in-out ${f.delay}s infinite`,
-              transform: `rotate(${f.rotate}deg)`,
-              opacity: visible ? 0.92 : 0,
-              transition: "opacity 1.2s ease",
-            }}
-          >
-            {/* Glass card */}
-            <div
-              style={{
-                background: "rgba(255,255,255,0.18)",
-                backdropFilter: "blur(14px)",
-                WebkitBackdropFilter: "blur(14px)",
-                border: "1.5px solid rgba(255,255,255,0.45)",
-                borderRadius: "24px",
-                padding: "10px 10px 6px",
-                boxShadow: "0 8px 32px rgba(100,140,200,0.25), 0 1px 0 rgba(255,255,255,0.6) inset",
-              }}
-            >
-              <img
-                src={m.src}
-                alt={m.label}
-                style={{
-                  width: "120px",
-                  height: "120px",
-                  borderRadius: "16px",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
-              <p
-                style={{
-                  margin: "6px 0 2px",
-                  textAlign: "center",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  color: "rgba(40,60,80,0.8)",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                {m.label}
-              </p>
-            </div>
-          </div>
-        );
-      })}
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(160deg,#b8d4ec 0%,#a4c4e0 60%,#8fb8d8 100%)",
+      fontFamily: "'Segoe UI',Arial,sans-serif",
+      overflowX: "hidden",
+      position: "relative",
+    }}>
 
-      {/* ── Keyframe styles injected inline ── */}
+      {/* ── Keyframes ── */}
       <style>{`
-        @keyframes floatBob0 {
-          0%,100%{transform:rotate(-8deg) translateY(0px);}
-          50%{transform:rotate(-8deg) translateY(-18px);}
-        }
-        @keyframes floatBob1 {
-          0%,100%{transform:rotate(6deg) translateY(0px);}
-          50%{transform:rotate(6deg) translateY(-22px);}
-        }
-        @keyframes floatBob2 {
-          0%,100%{transform:rotate(-4deg) translateY(0px);}
-          50%{transform:rotate(-4deg) translateY(-16px);}
-        }
-        @keyframes floatBob3 {
-          0%,100%{transform:rotate(10deg) translateY(0px);}
-          50%{transform:rotate(10deg) translateY(-20px);}
+        @keyframes bob {
+          0%,100%{transform:translateY(0);}
+          50%{transform:translateY(-12px);}
         }
         @keyframes slideUp {
-          from{opacity:0;transform:translateY(40px);}
+          from{opacity:0;transform:translateY(32px);}
           to{opacity:1;transform:translateY(0);}
         }
         @keyframes taskIn {
-          from{opacity:0;transform:translateX(-30px);}
-          to{opacity:1;transform:translateX(0);}
+          from{opacity:0;transform:translateY(20px);}
+          to{opacity:1;transform:translateY(0);}
         }
         @keyframes popIn {
-          0%{opacity:0;transform:scale(0.7);}
-          80%{transform:scale(1.05);}
+          0%{opacity:0;transform:scale(0.82);}
+          80%{transform:scale(1.03);}
           100%{opacity:1;transform:scale(1);}
         }
-        @keyframes pulse {
-          0%,100%{box-shadow:0 0 0 0 rgba(100,180,255,0.5);}
-          50%{box-shadow:0 0 0 14px rgba(100,180,255,0);}
+        @keyframes subtlePulse {
+          0%,100%{box-shadow:0 4px 24px rgba(20,40,80,0.28);}
+          50%{box-shadow:0 4px 36px rgba(20,40,80,0.45);}
         }
-        @keyframes confetti {
-          0%{transform:translateY(-10px) rotate(0deg);opacity:1;}
-          100%{transform:translateY(80px) rotate(720deg);opacity:0;}
-        }
+        input::placeholder{color:rgba(30,50,80,0.38);}
+        input:focus{border-color:rgba(30,60,120,0.45)!important;outline:none;}
       `}</style>
 
-      {/* ── Main Content ── */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 10,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          padding: "40px 20px",
-          gap: "28px",
-        }}
-      >
-        {/* Logo + Title */}
-        <div
-          style={{
-            animation: visible ? "slideUp 0.8s ease forwards" : "none",
-            opacity: 0,
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              background: "rgba(255,255,255,0.25)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "2px solid rgba(255,255,255,0.5)",
-              borderRadius: "32px",
-              padding: "28px 40px 24px",
-              boxShadow: "0 16px 48px rgba(80,120,180,0.2)",
-              display: "inline-block",
-            }}
-          >
-            <img
-              src="/mini-logo.jpg"
-              alt="Minions Logo"
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "3px solid rgba(255,255,255,0.7)",
-                marginBottom: "14px",
-                boxShadow: "0 4px 20px rgba(100,140,200,0.3)",
-              }}
-            />
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "clamp(2.4rem,6vw,3.6rem)",
-                fontWeight: 900,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "#1a2a3a",
-                textShadow: "0 2px 0 rgba(255,255,255,0.6)",
-              }}
-            >
-              MINIONS
-            </h1>
-            <p
-              style={{
-                margin: "6px 0 0",
-                fontSize: "1rem",
-                color: "rgba(30,50,80,0.75)",
-                fontWeight: 500,
-                letterSpacing: "0.06em",
-              }}
-            >
-              10,000 little cool minions on ETH
-            </p>
-          </div>
+      {/* ── Floating minions ── */}
+      {MINION_IMAGES.map((m, i) => (
+        <DraggableMinion
+          key={m.src}
+          img={m.src}
+          label={m.label}
+          initX={INIT_POS[i].x}
+          initY={INIT_POS[i].y}
+          bobDelay={i * 0.4}
+          bobDur={5 + i * 0.5}
+        />
+      ))}
+
+      {/* ── Main content ── */}
+      <div style={{
+        position: "relative",
+        zIndex: 10,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+        padding: "60px 24px 48px",
+        gap: "20px",
+      }}>
+
+        {/* Logo + title */}
+        <div style={{
+          textAlign: "center",
+          animation: mounted ? "slideUp 0.7s ease both" : "none",
+          opacity: mounted ? undefined : 0,
+        }}>
+          <img src="/mini-logo.jpg" alt="Minions" style={{
+            width: "64px", height: "64px",
+            borderRadius: "50%",
+            objectFit: "cover",
+            border: "3px solid rgba(255,255,255,0.85)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.14)",
+            marginBottom: "14px",
+          }} />
+          <h1 style={{
+            margin: 0,
+            fontSize: "clamp(2.8rem,8vw,4rem)",
+            fontWeight: 900,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: "#0f1e2e",
+            lineHeight: 1,
+          }}>
+            MINIONS
+          </h1>
+          <p style={{
+            margin: "8px 0 0",
+            fontSize: "0.95rem",
+            color: "rgba(15,30,46,0.6)",
+            fontWeight: 500,
+            letterSpacing: "0.04em",
+          }}>
+            10,000 little cool minions on ETH.
+          </p>
         </div>
 
         {/* Tasks */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "14px",
-            width: "100%",
-            maxWidth: "420px",
-          }}
-        >
+        <div style={{ width: "100%", maxWidth: "380px", display: "flex", flexDirection: "column", gap: "10px" }}>
           {TASKS.map((task, i) => (
             <a
               key={task.id}
@@ -284,50 +264,40 @@ export default function Home() {
               onClick={() => toggleTask(task.id)}
               style={{
                 textDecoration: "none",
-                animation: visible
-                  ? `taskIn 0.6s ease ${0.3 + i * 0.15}s both`
-                  : "none",
-                opacity: 0,
+                animation: mounted ? `taskIn 0.55s ease ${0.2 + i * 0.12}s both` : "none",
+                opacity: mounted ? undefined : 0,
               }}
             >
-              <div
-                style={{
-                  background: tasksDone[task.id]
-                    ? "rgba(100,200,120,0.22)"
-                    : "rgba(255,255,255,0.22)",
-                  backdropFilter: "blur(16px)",
-                  WebkitBackdropFilter: "blur(16px)",
-                  border: `1.5px solid ${tasksDone[task.id] ? "rgba(80,200,100,0.6)" : "rgba(255,255,255,0.45)"}`,
-                  borderRadius: "20px",
-                  padding: "16px 20px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "16px",
-                  boxShadow: "0 4px 20px rgba(80,120,180,0.12)",
-                  transition: "transform 0.15s, box-shadow 0.15s",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = "scale(1.02) translateY(-2px)";
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 32px rgba(80,120,180,0.22)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = "";
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 20px rgba(80,120,180,0.12)";
-                }}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 18px",
+                borderRadius: "16px",
+                background: tasksDone[task.id]
+                  ? "rgba(255,255,255,0.55)"
+                  : "rgba(255,255,255,0.3)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: tasksDone[task.id]
+                  ? "1.5px solid rgba(255,255,255,0.9)"
+                  : "1.5px solid rgba(255,255,255,0.55)",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+                transition: "background 0.2s, transform 0.15s",
+                cursor: "pointer",
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"}
+              onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.transform = ""}
               >
-                <span style={{ fontSize: "2rem", minWidth: "36px", textAlign: "center" }}>
-                  {task.icon}
-                </span>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontWeight: 800, fontSize: "1rem", color: "#1a2a3a" }}>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 700, fontSize: "0.95rem", color: "#0f1e2e" }}>
                     {task.label}
                   </p>
-                  <p style={{ margin: "2px 0 0", fontSize: "0.8rem", color: "rgba(30,50,80,0.65)" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: "0.78rem", color: "rgba(15,30,46,0.55)" }}>
                     {task.desc}
                   </p>
                 </div>
-                <span style={{ fontSize: "1.4rem" }}>
+                <span style={{ fontSize: "1.1rem", marginLeft: "12px" }}>
                   {tasksDone[task.id] ? "✅" : "→"}
                 </span>
               </div>
@@ -335,175 +305,133 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Whitelist Button */}
-        <div
-          style={{
-            animation: visible ? "slideUp 0.8s ease 0.7s both" : "none",
-            opacity: 0,
-          }}
-        >
+        {/* Whitelist button — NPC style */}
+        <div style={{
+          animation: mounted ? "slideUp 0.7s ease 0.55s both" : "none",
+          opacity: mounted ? undefined : 0,
+          width: "100%",
+          maxWidth: "380px",
+        }}>
           <button
             onClick={() => setFormOpen(true)}
             style={{
-              background: "linear-gradient(135deg, #1a2a3a 0%, #2d4a6a 100%)",
+              width: "100%",
+              background: "#0f1e2e",
               color: "#fff",
-              border: "2.5px solid rgba(255,255,255,0.3)",
-              borderRadius: "50px",
-              padding: "18px 52px",
-              fontSize: "1.1rem",
-              fontWeight: 900,
-              letterSpacing: "0.12em",
+              border: "none",
+              borderRadius: "14px",
+              padding: "17px 0",
+              fontSize: "1rem",
+              fontWeight: 800,
+              letterSpacing: "0.1em",
               textTransform: "uppercase",
               cursor: "pointer",
-              animation: "pulse 2.5s ease-in-out infinite",
-              boxShadow: "0 8px 32px rgba(30,60,100,0.35)",
-              transition: "transform 0.15s",
+              animation: "subtlePulse 3s ease-in-out infinite",
+              transition: "transform 0.15s, opacity 0.15s",
             }}
-            onMouseEnter={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.transform = "scale(1.06)")
-            }
-            onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.transform = "")
-            }
+            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.opacity = "0.88"}
+            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.opacity = "1"}
+            onMouseDown={e => (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.97)"}
+            onMouseUp={e => (e.currentTarget as HTMLButtonElement).style.transform = ""}
           >
-            🎯 Join Whitelist
+            JOIN WHITELIST
           </button>
         </div>
 
-        {/* Supply tag */}
-        <p
-          style={{
-            margin: 0,
-            fontSize: "0.78rem",
-            color: "rgba(30,50,80,0.55)",
-            letterSpacing: "0.08em",
-            fontWeight: 600,
-            animation: visible ? "slideUp 0.8s ease 0.9s both" : "none",
-            opacity: 0,
-          }}
-        >
-          10,000 SUPPLY · ETH BLOCKCHAIN
+        {/* Supply */}
+        <p style={{
+          margin: 0,
+          fontSize: "0.72rem",
+          color: "rgba(15,30,46,0.42)",
+          letterSpacing: "0.1em",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          animation: mounted ? "slideUp 0.7s ease 0.7s both" : "none",
+          opacity: mounted ? undefined : 0,
+        }}>
+          10,000 Supply · ETH Blockchain
         </p>
       </div>
 
-      {/* ── Whitelist Modal ── */}
+      {/* ── Whitelist modal ── */}
       {formOpen && (
         <div
+          onClick={e => { if (e.target === e.currentTarget) closeForm(); }}
           style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(10,20,40,0.55)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
+            position: "fixed", inset: 0, zIndex: 200,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(8,16,28,0.6)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
             padding: "20px",
           }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setFormOpen(false);
-              setSubmitted(false);
-              setWallet("");
-              setTwitter("");
-            }
-          }}
         >
-          <div
-            style={{
-              background: "rgba(255,255,255,0.22)",
-              backdropFilter: "blur(28px)",
-              WebkitBackdropFilter: "blur(28px)",
-              border: "2px solid rgba(255,255,255,0.5)",
-              borderRadius: "28px",
-              padding: "36px 32px 32px",
-              width: "100%",
-              maxWidth: "400px",
-              boxShadow: "0 24px 64px rgba(20,40,80,0.35)",
-              animation: "popIn 0.4s ease forwards",
-              position: "relative",
-            }}
-          >
+          <div style={{
+            width: "100%", maxWidth: "380px",
+            background: "rgba(230,240,252,0.75)",
+            backdropFilter: "blur(28px)",
+            WebkitBackdropFilter: "blur(28px)",
+            border: "1.5px solid rgba(255,255,255,0.75)",
+            borderRadius: "24px",
+            padding: "32px 28px 28px",
+            boxShadow: "0 24px 60px rgba(8,16,28,0.35)",
+            animation: "popIn 0.35s ease forwards",
+            position: "relative",
+          }}>
             {/* Close */}
-            <button
-              onClick={() => {
-                setFormOpen(false);
-                setSubmitted(false);
-                setWallet("");
-                setTwitter("");
-              }}
-              style={{
-                position: "absolute",
-                top: "16px",
-                right: "18px",
-                background: "none",
-                border: "none",
-                fontSize: "1.3rem",
-                cursor: "pointer",
-                color: "rgba(30,50,80,0.7)",
-              }}
-            >
-              ✕
-            </button>
+            <button onClick={closeForm} style={{
+              position: "absolute", top: "14px", right: "16px",
+              background: "none", border: "none",
+              fontSize: "1.1rem", cursor: "pointer",
+              color: "rgba(15,30,46,0.5)", lineHeight: 1,
+            }}>✕</button>
 
             {submitted ? (
-              <div style={{ textAlign: "center", padding: "16px 0" }}>
-                <div style={{ fontSize: "3.5rem", marginBottom: "12px" }}>🎉</div>
-                <h2 style={{ margin: "0 0 8px", color: "#1a2a3a", fontWeight: 900, fontSize: "1.5rem" }}>
-                  You&apos;re in!
+              <div style={{ textAlign: "center", padding: "12px 0" }}>
+                <div style={{ fontSize: "3rem", marginBottom: "10px" }}>🎉</div>
+                <h2 style={{ margin: "0 0 6px", color: "#0f1e2e", fontWeight: 900, fontSize: "1.4rem" }}>
+                  You're in!
                 </h2>
-                <p style={{ color: "rgba(30,50,80,0.7)", margin: 0 }}>
-                  Your spot is saved. Welcome to the minion family.
+                <p style={{ color: "rgba(15,30,46,0.6)", margin: 0, fontSize: "0.9rem" }}>
+                  Spot saved. Welcome to the minion family.
                 </p>
               </div>
             ) : (
               <>
-                <div style={{ textAlign: "center", marginBottom: "24px" }}>
-                  <img
-                    src="/mini-logo.jpg"
-                    alt="logo"
-                    style={{
-                      width: "52px",
-                      height: "52px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      marginBottom: "10px",
-                      border: "2px solid rgba(255,255,255,0.7)",
-                    }}
-                  />
-                  <h2 style={{ margin: 0, color: "#1a2a3a", fontWeight: 900, fontSize: "1.4rem" }}>
+                <div style={{ textAlign: "center", marginBottom: "22px" }}>
+                  <img src="/mini-logo.jpg" alt="logo" style={{
+                    width: "48px", height: "48px", borderRadius: "50%",
+                    objectFit: "cover", marginBottom: "10px",
+                    border: "2px solid rgba(255,255,255,0.8)",
+                  }} />
+                  <h2 style={{ margin: 0, color: "#0f1e2e", fontWeight: 900, fontSize: "1.3rem" }}>
                     Claim Your Spot
                   </h2>
-                  <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "rgba(30,50,80,0.65)" }}>
+                  <p style={{ margin: "4px 0 0", fontSize: "0.82rem", color: "rgba(15,30,46,0.55)" }}>
                     Whitelist is limited — be early.
                   </p>
                 </div>
 
-                <label style={{ display: "block", marginBottom: "14px" }}>
+                <label style={{ display: "block", marginBottom: "12px" }}>
                   <span style={labelStyle}>Wallet Address</span>
                   <input
-                    type="text"
-                    placeholder="0x..."
-                    value={wallet}
-                    onChange={(e) => setWallet(e.target.value)}
+                    type="text" placeholder="0x..."
+                    value={wallet} onChange={e => setWallet(e.target.value)}
                     style={inputStyle}
                   />
                 </label>
 
-                <label style={{ display: "block", marginBottom: "20px" }}>
+                <label style={{ display: "block", marginBottom: "18px" }}>
                   <span style={labelStyle}>Twitter / X Handle</span>
                   <input
-                    type="text"
-                    placeholder="@yourusername"
-                    value={twitter}
-                    onChange={(e) => setTwitter(e.target.value)}
+                    type="text" placeholder="@yourusername"
+                    value={twitter} onChange={e => setTwitter(e.target.value)}
                     style={inputStyle}
                   />
                 </label>
 
                 {error && (
-                  <p style={{ color: "#e05050", fontSize: "0.82rem", margin: "-8px 0 12px", fontWeight: 600 }}>
+                  <p style={{ color: "#c0392b", fontSize: "0.8rem", margin: "-6px 0 12px", fontWeight: 600 }}>
                     {error}
                   </p>
                 )}
@@ -513,25 +441,24 @@ export default function Home() {
                   disabled={submitting}
                   style={{
                     width: "100%",
-                    background: "linear-gradient(135deg, #1a2a3a 0%, #2d4a6a 100%)",
+                    background: "#0f1e2e",
                     color: "#fff",
                     border: "none",
-                    borderRadius: "14px",
+                    borderRadius: "12px",
                     padding: "15px",
-                    fontSize: "1rem",
-                    fontWeight: 900,
+                    fontSize: "0.95rem",
+                    fontWeight: 800,
                     letterSpacing: "0.08em",
+                    textTransform: "uppercase",
                     cursor: submitting ? "wait" : "pointer",
-                    opacity: submitting ? 0.7 : 1,
-                    transition: "opacity 0.2s",
+                    opacity: submitting ? 0.65 : 1,
+                    transition: "opacity 0.2s, transform 0.15s",
                   }}
+                  onMouseDown={e => (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.97)"}
+                  onMouseUp={e => (e.currentTarget as HTMLButtonElement).style.transform = ""}
                 >
-                  {submitting ? "Saving..." : "🚀 Submit"}
+                  {submitting ? "Saving..." : "Submit"}
                 </button>
-
-                <p style={{ textAlign: "center", marginTop: "14px", fontSize: "0.75rem", color: "rgba(30,50,80,0.5)" }}>
-                  Make sure you&apos;ve completed all tasks above first!
-                </p>
               </>
             )}
           </div>
@@ -543,24 +470,23 @@ export default function Home() {
 
 const labelStyle: React.CSSProperties = {
   display: "block",
-  marginBottom: "6px",
-  fontSize: "0.8rem",
+  marginBottom: "5px",
+  fontSize: "0.75rem",
   fontWeight: 700,
-  color: "rgba(30,50,80,0.75)",
-  letterSpacing: "0.05em",
+  color: "rgba(15,30,46,0.6)",
+  letterSpacing: "0.06em",
   textTransform: "uppercase",
 };
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
-  background: "rgba(255,255,255,0.4)",
-  border: "1.5px solid rgba(255,255,255,0.6)",
-  borderRadius: "12px",
-  padding: "12px 14px",
-  fontSize: "0.95rem",
-  color: "#1a2a3a",
-  outline: "none",
+  background: "rgba(255,255,255,0.55)",
+  border: "1.5px solid rgba(255,255,255,0.7)",
+  borderRadius: "10px",
+  padding: "11px 13px",
+  fontSize: "0.92rem",
+  color: "#0f1e2e",
   backdropFilter: "blur(8px)",
   WebkitBackdropFilter: "blur(8px)",
 };
