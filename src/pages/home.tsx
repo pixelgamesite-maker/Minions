@@ -434,35 +434,3 @@ export default function Home() {
   );
 }
 
-function TaskRow({ label, sub, done }: { label: string; sub: string; done: boolean }) {
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "11px 13px", borderRadius: "10px",
-      background: done ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.03)",
-      border: "1px solid " + (done ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)"),
-      transition: "background 0.2s, border 0.2s", cursor: "pointer",
-    }}>
-      <div>
-        <p style={{ margin: 0, fontFamily: sans, fontWeight: 600, fontSize: "0.85rem", color: done ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.5)", transition: "color 0.2s" }}>
-          {label}
-        </p>
-        <p style={{ margin: "2px 0 0", fontFamily: sans, fontSize: "0.7rem", color: "rgba(255,255,255,0.24)" }}>
-          {sub}
-        </p>
-      </div>
-      <div style={{
-        width: "18px", height: "18px", borderRadius: "50%", flexShrink: 0,
-        border: done ? "none" : "1.5px solid rgba(255,255,255,0.14)",
-        background: done ? "#ffffff" : "transparent",
-        display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s",
-      }}>
-        {done && (
-          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-            <path d="M1 3.5L3.2 5.8L8 1" stroke="#0c0e14" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
-      </div>
-    </div>
-  );
-}
