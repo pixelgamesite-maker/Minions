@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -26,73 +26,222 @@ function isValidUrl(url: string) {
 const mono = "'Space Mono', monospace";
 const sans = "'Space Grotesk', sans-serif";
 
-const inp = (extra?: React.CSSProperties): React.CSSProperties => ({
-  width: "100%",
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: "8px",
-  padding: "11px 13px",
-  fontSize: "0.88rem",
-  color: "#fff",
-  fontFamily: mono,
-  outline: "none",
-  transition: "border 0.2s",
-  boxSizing: "border-box",
-  ...extra,
-});
+/* ─── Flip Card ─── */
+function FlipCard({
+  index, icon, title, subtitle, done, locked,
+  children, onFlip,
+}: {
+  index: number; icon: string; title: string; subtitle: string;
+  done: boolean; locked: boolean;
+  children?: React.ReactNode;
+  onFlip?: () => void;
+}) {
+  const [flipped, setFlipped] = useState(false);
 
-const lbl: React.CSSProperties = {
-  display: "block",
-  fontFamily: sans,
-  fontSize: "0.68rem",
-  fontWeight: 600,
-  color: "rgba(255,255,255,0.32)",
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-  marginBottom: "5px",
-};
+  // auto-flip open if already done (from localStorage)
+  useEffect(() => {
+    if (done) setFlipped(true);
+  }, [done]);
 
-function TaskRow({ label, sub, done }: { label: string; sub: string; done: boolean }) {
+  function handleClick() {
+    if (locked) return;
+    if (!flipped) {
+      setFlipped(true);
+      onFlip?.();
+    }
+  }
+
+  const cardColor = [
+    "linear-gradient(135deg,#1a1f35 0%,#0f1420 100%)",
+    "linear-gradient(135deg,#1a2535 0%,#0f1820 100%)",
+    "linear-gradient(135deg,#1f1a35 0%,#140f20 100%)",
+    "linear-gradient(135deg,#1a3525 0%,#0f2018 100%)",
+  ][index] ?? "linear-gradient(135deg,#1a1f35,#0f1420)";
+
+  const glowColor = ["rgba(100,120,255,0.15)","rgba(60,160,220,0.15)","rgba(180,100,255,0.15)","rgba(60,200,130,0.15)"][index] ?? "rgba(255,255,255,0.08)";
+
   return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "11px 13px", borderRadius: "10px",
-      background: done ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.03)",
-      border: "1px solid " + (done ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)"),
-      transition: "background 0.2s, border 0.2s", cursor: "pointer",
-    }}>
-      <div>
-        <p style={{ margin: 0, fontFamily: sans, fontWeight: 600, fontSize: "0.85rem", color: done ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.5)", transition: "color 0.2s" }}>
-          {label}
-        </p>
-        <p style={{ margin: "2px 0 0", fontFamily: sans, fontSize: "0.7rem", color: "rgba(255,255,255,0.24)" }}>
-          {sub}
-        </p>
-      </div>
+    <div
+      onClick={handleClick}
+      style={{
+        perspective: "1000px",
+        cursor: locked ? "not-allowed" : flipped ? "default" : "pointer",
+        animation: `cardIn 0.45s ease ${0.1 + index * 0.1}s both`,
+      }}
+    >
       <div style={{
-        width: "18px", height: "18px", borderRadius: "50%", flexShrink: 0,
-        border: done ? "none" : "1.5px solid rgba(255,255,255,0.14)",
-        background: done ? "#ffffff" : "transparent",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        transition: "all 0.2s",
+        position: "relative",
+        transformStyle: "preserve-3d",
+        transition: "transform 0.55s cubic-bezier(0.23,1,0.32,1)",
+        transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        minHeight: flipped ? "auto" : "130px",
       }}>
-        {done && (
-          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-            <path d="M1 3.5L3.2 5.8L8 1" stroke="#0c0e14" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
+
+        {/* ── FRONT (locked face) ── */}
+        <div style={{
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+          position: flipped ? "absolute" : "relative",
+          inset: 0,
+          background: cardColor,
+          border: `1px solid ${locked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)"}`,
+          borderRadius: "16px",
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "10px",
+          minHeight: "130px",
+          boxShadow: `0 4px 24px ${glowColor}, 0 1px 0 rgba(255,255,255,0.06) inset`,
+          opacity: locked ? 0.45 : 1,
+        }}>
+          <span style={{ fontSize: "1.8rem", lineHeight: 1 }}>{locked ? "🔒" : icon}</span>
+          <div style={{ textAlign: "center" }}>
+            <p style={{ margin: 0, fontFamily: mono, fontSize: "0.72rem", fontWeight: 700, color: locked ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.9)", letterSpacing: "0.04em" }}>
+              {title}
+            </p>
+            {!locked && (
+              <p style={{ margin: "4px 0 0", fontFamily: sans, fontSize: "0.68rem", color: "rgba(255,255,255,0.35)" }}>
+                Tap to open
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ── BACK (task content) ── */}
+        <div style={{
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+          transform: "rotateY(180deg)",
+          position: flipped ? "relative" : "absolute",
+          inset: 0,
+          background: done
+            ? "linear-gradient(135deg,#0f2a1a 0%,#0a1f12 100%)"
+            : cardColor,
+          border: `1px solid ${done ? "rgba(80,220,120,0.3)" : "rgba(255,255,255,0.12)"}`,
+          borderRadius: "16px",
+          padding: "18px 16px",
+          boxShadow: done
+            ? "0 4px 24px rgba(60,200,100,0.15)"
+            : `0 4px 24px ${glowColor}`,
+          minHeight: "130px",
+        }}>
+          {/* card header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "1.1rem" }}>{icon}</span>
+              <div>
+                <p style={{ margin: 0, fontFamily: mono, fontSize: "0.7rem", fontWeight: 700, color: "rgba(255,255,255,0.9)", letterSpacing: "0.04em" }}>
+                  {title}
+                </p>
+                <p style={{ margin: "1px 0 0", fontFamily: sans, fontSize: "0.65rem", color: "rgba(255,255,255,0.35)" }}>
+                  {subtitle}
+                </p>
+              </div>
+            </div>
+            {/* done badge */}
+            {done && (
+              <div style={{
+                width: "22px", height: "22px", borderRadius: "50%",
+                background: "#3ddc84", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="#0a1f12" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* task body */}
+          {children}
+        </div>
       </div>
     </div>
   );
 }
 
+/* ─── Auto-rotating gallery ─── */
+function MinionGallery() {
+  const [current, setCurrent] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    timerRef.current = setTimeout(advance, 3000);
+    return () => clearTimeout(timerRef.current);
+  }, [current]);
+
+  function advance() {
+    setAnimating(true);
+    setTimeout(() => {
+      setCurrent(c => (c + 1) % MINIONS.length);
+      setAnimating(false);
+    }, 300);
+  }
+
+  function goTo(i: number) {
+    if (i === current) return;
+    clearTimeout(timerRef.current);
+    setAnimating(true);
+    setTimeout(() => { setCurrent(i); setAnimating(false); }, 300);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+      {/* main image */}
+      <div style={{
+        width: "100%", maxWidth: "320px",
+        aspectRatio: "1/1",
+        borderRadius: "20px",
+        overflow: "hidden",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(255,255,255,0.03)",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.4)",
+      }}>
+        <img
+          src={MINIONS[current]}
+          alt={`Minion ${current + 1}`}
+          style={{
+            width: "100%", height: "100%", objectFit: "cover", display: "block",
+            opacity: animating ? 0 : 1,
+            transition: "opacity 0.3s ease",
+          }}
+        />
+      </div>
+      {/* counter */}
+      <p style={{ fontFamily: mono, fontSize: "0.6rem", color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", margin: 0 }}>
+        {String(current + 1).padStart(2,"0")} / {String(MINIONS.length).padStart(2,"0")}
+      </p>
+      {/* dots */}
+      <div style={{ display: "flex", gap: "6px" }}>
+        {MINIONS.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            style={{
+              width: i === current ? "20px" : "6px",
+              height: "6px",
+              borderRadius: "3px",
+              background: i === current ? "#ffffff" : "rgba(255,255,255,0.2)",
+              border: "none", padding: 0, cursor: "pointer",
+              transition: "all 0.3s ease",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main ─── */
 export default function Home() {
   const [open,     setOpen]     = useState(false);
   const [wallet,   setWallet]   = useState("");
   const [twitter,  setTwitter]  = useState("");
   const [quoteUrl, setQuoteUrl] = useState("");
   const [sending,  setSending]  = useState(false);
-  const [done,     setDone]     = useState(false);
+  const [success,  setSuccess]  = useState(false);
   const [err,      setErr]      = useState("");
   const [tasks,    setTasks]    = useState<Record<string, boolean>>({});
   const [ready,    setReady]    = useState(false);
@@ -102,70 +251,85 @@ export default function Home() {
     link.rel = "stylesheet"; link.href = FONT_LINK;
     document.head.appendChild(link);
     try {
-      const s = localStorage.getItem("mn_tasks");
-      if (s) setTasks(JSON.parse(s));
+      const saved = localStorage.getItem("mn_tasks_v2");
+      if (saved) {
+        const p = JSON.parse(saved);
+        setTasks(p.tasks ?? {});
+        setWallet(p.wallet ?? "");
+        setTwitter(p.twitter ?? "");
+        setQuoteUrl(p.quoteUrl ?? "");
+      }
     } catch {}
     setTimeout(() => setReady(true), 80);
   }, []);
 
   useEffect(() => {
-    if (ready) localStorage.setItem("mn_tasks", JSON.stringify(tasks));
-  }, [tasks, ready]);
+    if (!ready) return;
+    localStorage.setItem("mn_tasks_v2", JSON.stringify({ tasks, wallet, twitter, quoteUrl }));
+  }, [tasks, wallet, twitter, quoteUrl, ready]);
 
-  const allTasksDone = !!(tasks["follow"] && tasks["like"] && tasks["comment"]);
-  const allDone = allTasksDone && isValidEvm(wallet) && isValidUrl(quoteUrl) && twitter.trim().length > 0;
+  const card1Done = twitter.trim().length > 1;
+  const card2Done = !!tasks["like"];
+  const card3Done = isValidUrl(quoteUrl);
+  const card4Done = isValidEvm(wallet);
+  const allDone   = card1Done && card2Done && card3Done && card4Done;
 
   async function submit() {
-    if (!isValidEvm(wallet))  { setErr("Enter a valid EVM wallet address (0x…)."); return; }
-    if (!twitter.trim())       { setErr("Enter your X / Twitter handle."); return; }
-    if (!isValidUrl(quoteUrl)) { setErr("Enter a valid https:// quote tweet link."); return; }
-    if (!allTasksDone)         { setErr("Complete all tasks first."); return; }
+    if (!allDone) { setErr("Complete all cards first."); return; }
     setErr(""); setSending(true);
     const { error: e } = await supabase.from("minions").insert([{
       wallet: wallet.trim(), twitter: twitter.trim(), quote_url: quoteUrl.trim(),
     }]);
     setSending(false);
     if (e) setErr("Something went wrong. Try again.");
-    else setDone(true);
+    else setSuccess(true);
   }
 
   function close() {
-    setOpen(false); setDone(false); setWallet(""); setTwitter(""); setQuoteUrl(""); setErr("");
+    setOpen(false); setSuccess(false); setErr("");
   }
 
-  function focusBorder(e: React.FocusEvent<HTMLInputElement>) { e.target.style.borderColor = "rgba(255,255,255,0.28)"; }
-  function blurBorder(e: React.FocusEvent<HTMLInputElement>)  { e.target.style.borderColor = "rgba(255,255,255,0.1)"; }
+  function focusBorder(e: React.FocusEvent<HTMLInputElement>) { e.target.style.borderColor = "rgba(255,255,255,0.3)"; }
+  function blurBorder(e: React.FocusEvent<HTMLInputElement>)  { e.target.style.borderColor = "rgba(255,255,255,0.08)"; }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", background: "rgba(0,0,0,0.3)",
+    border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px",
+    padding: "10px 12px", fontSize: "0.82rem", color: "#fff",
+    fontFamily: mono, outline: "none", transition: "border 0.2s", boxSizing: "border-box",
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#0c0e14", fontFamily: sans, overflowX: "hidden" }}>
 
       <style>{`
         @keyframes fadeUp {
-          from { opacity:0; transform:translateY(24px); }
+          from { opacity:0; transform:translateY(22px); }
           to   { opacity:1; transform:translateY(0); }
         }
-        @keyframes taskSlide {
-          from { opacity:0; transform:translateX(-14px); }
-          to   { opacity:1; transform:translateX(0); }
-        }
-        @keyframes modalIn {
-          from { opacity:0; transform:scale(0.95) translateY(12px); }
-          to   { opacity:1; transform:scale(1) translateY(0); }
-        }
         @keyframes cardIn {
-          from { opacity:0; transform:translateY(20px) scale(0.96); }
+          from { opacity:0; transform:translateY(18px) scale(0.97); }
           to   { opacity:1; transform:translateY(0) scale(1); }
         }
+        @keyframes modalIn {
+          from { opacity:0; transform:scale(0.96) translateY(14px); }
+          to   { opacity:1; transform:scale(1) translateY(0); }
+        }
+        @keyframes stamp {
+          0%   { transform:scale(0) rotate(-20deg); opacity:0; }
+          60%  { transform:scale(1.2) rotate(4deg); opacity:1; }
+          100% { transform:scale(1) rotate(0deg); opacity:1; }
+        }
         * { box-sizing:border-box; }
-        ::placeholder { color:rgba(255,255,255,0.18); }
-        ::-webkit-scrollbar { width:4px; }
-        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
+        ::placeholder { color:rgba(255,255,255,0.18); font-family:'Space Grotesk',sans-serif; }
+        ::-webkit-scrollbar { width:3px; }
+        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:4px; }
       `}</style>
 
-      {/* ── Logo top-left ── */}
+      {/* ── Logo ── */}
       <div style={{ position: "fixed", top: "20px", left: "20px", zIndex: 10, display: "flex", alignItems: "center", gap: "10px" }}>
         <img src="/mini-logo.jpg" style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "cover" }} alt="" />
-        <span style={{ fontFamily: mono, fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
+        <span style={{ fontFamily: mono, fontSize: "0.68rem", color: "rgba(255,255,255,0.38)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
           Minions
         </span>
       </div>
@@ -175,11 +339,10 @@ export default function Home() {
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         minHeight: "100vh", padding: "100px 24px 60px",
       }}>
-        {/* pill */}
         <div style={{ animation: ready ? "fadeUp 0.6s ease 0.05s both" : "none", marginBottom: "18px" }}>
           <span style={{
-            fontFamily: mono, fontSize: "0.6rem", letterSpacing: "0.22em", textTransform: "uppercase",
-            color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.1)",
+            fontFamily: mono, fontSize: "0.58rem", letterSpacing: "0.22em", textTransform: "uppercase",
+            color: "rgba(255,255,255,0.28)", border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "999px", padding: "5px 14px", display: "inline-block",
           }}>
             10,000 on ETH
@@ -188,35 +351,32 @@ export default function Home() {
 
         <h1 style={{
           fontFamily: mono, fontSize: "clamp(3rem,14vw,6.5rem)", fontWeight: 700,
-          color: "#ffffff", margin: "0 0 10px", letterSpacing: "-0.02em", lineHeight: 0.95,
-          textAlign: "center",
+          color: "#fff", margin: "0 0 10px", letterSpacing: "-0.02em", lineHeight: 0.95, textAlign: "center",
           animation: ready ? "fadeUp 0.6s ease 0.12s both" : "none", opacity: ready ? undefined : 0,
         }}>
           MINIONS
         </h1>
 
         <p style={{
-          fontFamily: sans, fontSize: "0.95rem", color: "rgba(255,255,255,0.38)",
+          fontFamily: sans, fontSize: "0.95rem", color: "rgba(255,255,255,0.35)",
           margin: "0 0 36px", textAlign: "center",
           animation: ready ? "fadeUp 0.6s ease 0.2s both" : "none", opacity: ready ? undefined : 0,
         }}>
           10,000 little cool minions coming on ETH
         </p>
 
-        {/* CTA */}
         <button
           onClick={() => setOpen(true)}
           style={{
-            fontFamily: mono, fontSize: "0.8rem", fontWeight: 700,
-            letterSpacing: "0.18em", textTransform: "uppercase",
-            color: "#0c0e14", background: "#ffffff", border: "none",
-            borderRadius: "8px", padding: "17px 44px", cursor: "pointer",
-            boxShadow: "0 0 0 1px rgba(255,255,255,0.12), 0 8px 28px rgba(0,0,0,0.5)",
-            transition: "transform 0.15s, box-shadow 0.15s, background 0.15s",
+            fontFamily: mono, fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.18em",
+            textTransform: "uppercase", color: "#0c0e14", background: "#ffffff",
+            border: "none", borderRadius: "8px", padding: "17px 44px", cursor: "pointer",
+            boxShadow: "0 0 0 1px rgba(255,255,255,0.1), 0 8px 28px rgba(0,0,0,0.5)",
+            transition: "transform 0.15s, background 0.15s, box-shadow 0.15s",
             animation: ready ? "fadeUp 0.6s ease 0.28s both" : "none", opacity: ready ? undefined : 0,
           }}
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e8f0ff"; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; (e.currentTarget as HTMLButtonElement).style.transform = ""; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; (e.currentTarget as HTMLButtonElement).style.transform = ""; }}
           onMouseDown={e => (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.97)"}
           onMouseUp={e => (e.currentTarget as HTMLButtonElement).style.transform = ""}
         >
@@ -225,58 +385,22 @@ export default function Home() {
       </div>
 
       {/* ── Meet the Minions ── */}
-      <div style={{ padding: "0 24px 100px", maxWidth: "680px", margin: "0 auto" }}>
-
-        {/* Section header */}
+      <div style={{ padding: "0 24px 100px", maxWidth: "480px", margin: "0 auto" }}>
         <div style={{ marginBottom: "28px", animation: ready ? "fadeUp 0.6s ease 0.35s both" : "none", opacity: ready ? undefined : 0 }}>
-          <span style={{
-            fontFamily: mono, fontSize: "0.55rem", letterSpacing: "0.24em",
-            textTransform: "uppercase", color: "rgba(255,255,255,0.28)",
-          }}>
+          <span style={{ fontFamily: mono, fontSize: "0.52rem", letterSpacing: "0.24em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)" }}>
             The collection
           </span>
-          <h2 style={{
-            fontFamily: mono, color: "#fff", margin: "4px 0 0",
-            fontSize: "clamp(1.4rem,5vw,2rem)", fontWeight: 700, letterSpacing: "-0.02em",
-          }}>
+          <h2 style={{ fontFamily: mono, color: "#fff", margin: "4px 0 0", fontSize: "clamp(1.4rem,5vw,2rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>
             Meet the Minions
           </h2>
         </div>
-
-        {/* 3-column grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "10px",
-        }}>
-          {MINIONS.map((src, i) => (
-            <div
-              key={src}
-              style={{
-                borderRadius: "14px",
-                overflow: "hidden",
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                aspectRatio: "1 / 1",
-                animation: ready ? `cardIn 0.5s ease ${0.38 + i * 0.06}s both` : "none",
-                opacity: ready ? undefined : 0,
-              }}
-            >
-              <img
-                src={src}
-                alt={`Minion ${i + 1}`}
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-              />
-            </div>
-          ))}
+        <div style={{ animation: ready ? "fadeUp 0.6s ease 0.45s both" : "none", opacity: ready ? undefined : 0 }}>
+          <MinionGallery />
         </div>
-
-        {/* Footer note */}
         <p style={{
-          fontFamily: mono, fontSize: "0.6rem", letterSpacing: "0.16em",
-          textTransform: "uppercase", color: "rgba(255,255,255,0.2)",
-          textAlign: "center", marginTop: "32px",
-          animation: ready ? "fadeUp 0.6s ease 0.9s both" : "none", opacity: ready ? undefined : 0,
+          fontFamily: mono, fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase",
+          color: "rgba(255,255,255,0.18)", textAlign: "center", marginTop: "36px",
+          animation: ready ? "fadeUp 0.6s ease 0.55s both" : "none", opacity: ready ? undefined : 0,
         }}>
           10,000 Supply · ETH Blockchain
         </p>
@@ -288,117 +412,154 @@ export default function Home() {
           onClick={e => { if (e.target === e.currentTarget) close(); }}
           style={{
             position: "fixed", inset: 0, zIndex: 100,
-            background: "rgba(0,0,0,0.78)",
-            backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+            background: "rgba(0,0,0,0.82)",
+            backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "16px",
           }}
         >
           <div style={{
-            width: "100%", maxWidth: "420px", maxHeight: "92vh", overflowY: "auto",
-            background: "#13161f", border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "20px", padding: "28px 24px",
-            animation: "modalIn 0.28s ease both", position: "relative",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.7)",
+            width: "100%", maxWidth: "440px", maxHeight: "94vh", overflowY: "auto",
+            background: "#0e111a",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "22px", padding: "26px 20px 24px",
+            animation: "modalIn 0.3s ease both", position: "relative",
+            boxShadow: "0 40px 80px rgba(0,0,0,0.8)",
           }}>
 
             <button onClick={close} style={{
               position: "absolute", top: "14px", right: "16px",
               background: "none", border: "none", cursor: "pointer",
-              color: "rgba(255,255,255,0.25)", fontSize: "1rem", lineHeight: 1, fontFamily: sans,
+              color: "rgba(255,255,255,0.22)", fontSize: "1rem", lineHeight: 1,
             }}>✕</button>
 
-            {done ? (
-              <div style={{ textAlign: "center", padding: "28px 0" }}>
+            {success ? (
+              <div style={{ textAlign: "center", padding: "32px 0" }}>
                 <div style={{
-                  width: "48px", height: "48px", borderRadius: "50%", background: "#fff",
-                  display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px",
+                  width: "56px", height: "56px", borderRadius: "50%",
+                  background: "linear-gradient(135deg,#3ddc84,#2ab865)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 18px", animation: "stamp 0.5s cubic-bezier(0.23,1,0.32,1) both",
+                  boxShadow: "0 8px 24px rgba(60,200,100,0.35)",
                 }}>
-                  <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
-                    <path d="M2 8L7.5 13.5L18 2" stroke="#0c0e14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg width="22" height="18" viewBox="0 0 22 18" fill="none">
+                    <path d="M2 9L8 15L20 2" stroke="#0a1f12" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <h2 style={{ fontFamily: mono, color: "#fff", margin: "0 0 8px", fontSize: "1.25rem" }}>You're in.</h2>
-                <p style={{ color: "rgba(255,255,255,0.38)", margin: 0, fontFamily: sans, fontSize: "0.88rem" }}>
+                <h2 style={{ fontFamily: mono, color: "#fff", margin: "0 0 8px", fontSize: "1.3rem", letterSpacing: "-0.01em" }}>You're in.</h2>
+                <p style={{ color: "rgba(255,255,255,0.35)", margin: 0, fontFamily: sans, fontSize: "0.88rem" }}>
                   Spot saved. Welcome to the family.
                 </p>
               </div>
             ) : (
               <>
-                <div style={{ marginBottom: "22px" }}>
-                  <span style={{ fontFamily: mono, fontSize: "0.55rem", letterSpacing: "0.24em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)" }}>
+                {/* Modal header */}
+                <div style={{ marginBottom: "20px" }}>
+                  <span style={{ fontFamily: mono, fontSize: "0.52rem", letterSpacing: "0.24em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)" }}>
                     Whitelist
                   </span>
-                  <h2 style={{ fontFamily: mono, color: "#fff", margin: "4px 0 0", fontSize: "1.3rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
+                  <h2 style={{ fontFamily: mono, color: "#fff", margin: "4px 0 2px", fontSize: "1.3rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
                     Claim your spot
                   </h2>
-                </div>
-
-                {/* Tasks */}
-                <div style={{ marginBottom: "20px" }}>
-                  <p style={{ fontFamily: mono, fontSize: "0.55rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", margin: "0 0 8px" }}>
-                    Complete to unlock
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-
-                    <a href="https://x.com/theminionxyz" target="_blank" rel="noopener noreferrer"
-                      onClick={() => setTasks(p => ({ ...p, follow: true }))}
-                      style={{ textDecoration: "none", animation: "taskSlide 0.35s ease 0s both" }}>
-                      <TaskRow label="Follow on X" sub="@theminionxyz" done={!!tasks["follow"]} />
-                    </a>
-
-                    <div style={{ animation: "taskSlide 0.35s ease 0.08s both" }}>
-                      <a href="https://x.com/theminionxyz" target="_blank" rel="noopener noreferrer"
-                        onClick={() => setTasks(p => ({ ...p, like: true }))}
-                        style={{ textDecoration: "none" }}>
-                        <TaskRow label="Like & Quote tweet" sub="Quote the pinned post" done={!!tasks["like"]} />
-                      </a>
-                      <div style={{ marginTop: "6px" }}>
-                        <input
-                          type="url"
-                          placeholder="https://x.com/your-quote-link"
-                          value={quoteUrl}
-                          onChange={e => setQuoteUrl(e.target.value)}
-                          style={inp({ fontSize: "0.78rem", padding: "9px 12px" })}
-                          onFocus={focusBorder} onBlur={blurBorder}
-                        />
-                        {quoteUrl && !isValidUrl(quoteUrl) && (
-                          <p style={{ fontFamily: sans, fontSize: "0.7rem", color: "#ff6b6b", margin: "4px 0 0" }}>
-                            Must be a valid https:// link
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <a href="https://x.com/theminionxyz" target="_blank" rel="noopener noreferrer"
-                      onClick={() => setTasks(p => ({ ...p, comment: true }))}
-                      style={{ textDecoration: "none", animation: "taskSlide 0.35s ease 0.16s both" }}>
-                      <TaskRow label="Comment & tag 2 friends" sub="Reply to the pinned post" done={!!tasks["comment"]} />
-                    </a>
-
+                  {/* progress bar */}
+                  <div style={{ marginTop: "10px", height: "3px", background: "rgba(255,255,255,0.07)", borderRadius: "2px", overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%", borderRadius: "2px",
+                      background: "linear-gradient(90deg,#4f8eff,#a78bfa)",
+                      width: `${([card1Done,card2Done,card3Done,card4Done].filter(Boolean).length / 4) * 100}%`,
+                      transition: "width 0.4s ease",
+                    }} />
                   </div>
+                  <p style={{ fontFamily: sans, fontSize: "0.68rem", color: "rgba(255,255,255,0.25)", margin: "6px 0 0" }}>
+                    {[card1Done,card2Done,card3Done,card4Done].filter(Boolean).length} of 4 completed
+                  </p>
                 </div>
 
-                <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", margin: "0 0 18px" }} />
+                {/* 2×2 flip card grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "14px" }}>
-                  <div>
-                    <label style={lbl}>EVM Wallet Address</label>
-                    <input type="text" placeholder="0x..." value={wallet}
-                      onChange={e => setWallet(e.target.value)}
-                      style={inp()} onFocus={focusBorder} onBlur={blurBorder} />
-                    {wallet && !isValidEvm(wallet) && (
-                      <p style={{ fontFamily: sans, fontSize: "0.7rem", color: "#ff6b6b", margin: "4px 0 0" }}>
-                        Must be a valid 0x… EVM address
+                  {/* Card 1 — X Handle */}
+                  <FlipCard index={0} icon="𝕏" title="X Handle" subtitle="Your username" done={card1Done} locked={false}>
+                    <input
+                      type="text"
+                      placeholder="@handle"
+                      value={twitter}
+                      onChange={e => setTwitter(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      style={inputStyle}
+                      onFocus={focusBorder} onBlur={blurBorder}
+                    />
+                    {card1Done && (
+                      <p style={{ fontFamily: sans, fontSize: "0.65rem", color: "#3ddc84", margin: "6px 0 0" }}>
+                        Looks good
                       </p>
                     )}
-                  </div>
-                  <div>
-                    <label style={lbl}>X / Twitter Handle</label>
-                    <input type="text" placeholder="@handle" value={twitter}
-                      onChange={e => setTwitter(e.target.value)}
-                      style={inp()} onFocus={focusBorder} onBlur={blurBorder} />
-                  </div>
+                  </FlipCard>
+
+                  {/* Card 2 — Like & Retweet */}
+                  <FlipCard index={1} icon="♻" title="Like & RT" subtitle="Pinned post" done={card2Done} locked={!card1Done}
+                    onFlip={() => {
+                      window.open("https://x.com/theminionxyz","_blank");
+                      setTimeout(() => setTasks(p => ({ ...p, like: true })), 800);
+                    }}
+                  >
+                    {card2Done ? (
+                      <p style={{ fontFamily: sans, fontSize: "0.72rem", color: "#3ddc84", margin: 0 }}>
+                        Liked & retweeted
+                      </p>
+                    ) : (
+                      <p style={{ fontFamily: sans, fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+                        Opening X...
+                      </p>
+                    )}
+                  </FlipCard>
+
+                  {/* Card 3 — Quote tweet */}
+                  <FlipCard index={2} icon="💬" title="Quote Tweet" subtitle="Paste your link" done={card3Done} locked={!card2Done}>
+                    <input
+                      type="url"
+                      placeholder="https://x.com/..."
+                      value={quoteUrl}
+                      onChange={e => setQuoteUrl(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      style={inputStyle}
+                      onFocus={focusBorder} onBlur={blurBorder}
+                    />
+                    {quoteUrl && !isValidUrl(quoteUrl) && (
+                      <p style={{ fontFamily: sans, fontSize: "0.62rem", color: "#ff6b6b", margin: "5px 0 0" }}>
+                        Needs https://
+                      </p>
+                    )}
+                    {card3Done && (
+                      <p style={{ fontFamily: sans, fontSize: "0.62rem", color: "#3ddc84", margin: "5px 0 0" }}>
+                        Valid link
+                      </p>
+                    )}
+                  </FlipCard>
+
+                  {/* Card 4 — EVM Wallet */}
+                  <FlipCard index={3} icon="◈" title="EVM Wallet" subtitle="0x address" done={card4Done} locked={!card3Done}>
+                    <input
+                      type="text"
+                      placeholder="0x..."
+                      value={wallet}
+                      onChange={e => setWallet(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      style={inputStyle}
+                      onFocus={focusBorder} onBlur={blurBorder}
+                    />
+                    {wallet && !isValidEvm(wallet) && (
+                      <p style={{ fontFamily: sans, fontSize: "0.62rem", color: "#ff6b6b", margin: "5px 0 0" }}>
+                        Invalid address
+                      </p>
+                    )}
+                    {card4Done && (
+                      <p style={{ fontFamily: sans, fontSize: "0.62rem", color: "#3ddc84", margin: "5px 0 0" }}>
+                        Valid wallet
+                      </p>
+                    )}
+                  </FlipCard>
+
                 </div>
 
                 {err && (
@@ -408,22 +569,26 @@ export default function Home() {
                 )}
 
                 <button
-                  onClick={submit} disabled={sending}
+                  onClick={submit}
+                  disabled={sending || !allDone}
                   style={{
                     width: "100%",
-                    background: allDone ? "#ffffff" : "rgba(255,255,255,0.06)",
-                    color: allDone ? "#0c0e14" : "rgba(255,255,255,0.22)",
+                    background: allDone
+                      ? "linear-gradient(135deg,#4f8eff 0%,#a78bfa 100%)"
+                      : "rgba(255,255,255,0.05)",
+                    color: allDone ? "#fff" : "rgba(255,255,255,0.2)",
                     border: "1px solid " + (allDone ? "transparent" : "rgba(255,255,255,0.06)"),
-                    borderRadius: "8px", padding: "14px", fontFamily: mono,
-                    fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.16em",
-                    textTransform: "uppercase",
+                    borderRadius: "10px", padding: "15px",
+                    fontFamily: mono, fontSize: "0.75rem", fontWeight: 700,
+                    letterSpacing: "0.16em", textTransform: "uppercase",
                     cursor: allDone && !sending ? "pointer" : "not-allowed",
-                    transition: "all 0.25s",
+                    transition: "all 0.3s ease",
+                    boxShadow: allDone ? "0 8px 24px rgba(79,142,255,0.35)" : "none",
                   }}
                   onMouseDown={e => allDone && ((e.currentTarget as HTMLButtonElement).style.transform = "scale(0.98)")}
                   onMouseUp={e => ((e.currentTarget as HTMLButtonElement).style.transform = "")}
                 >
-                  {sending ? "Saving..." : allDone ? "Submit" : "Complete all tasks to unlock"}
+                  {sending ? "Saving..." : allDone ? "Submit" : "Complete all cards"}
                 </button>
               </>
             )}
@@ -433,4 +598,3 @@ export default function Home() {
     </div>
   );
 }
-
