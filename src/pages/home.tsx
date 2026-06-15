@@ -760,7 +760,7 @@ export default function Home() {
                   <FlipCard index={1} icon="↺" title="Complete Missions" subtitle="Mission 02 / 04" done={c2} locked={!c1}
                     onFlip={() => { window.open("https://x.com/theminionxyz", "_blank"); setTimeout(() => setTasks(p => ({ ...p, like:true })), 800); }}>
                     <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.78rem", color:"rgba(255,255,255,0.5)", margin:0, lineHeight:1.5 }}>
-                      {c2 ? "Like & retweet confirmed." : "Follow, like and retweet the pinned post on X. Quote with "MINIONS" and tag 2 friends."}
+                      {c2 ? "Like & retweet confirmed." : 'Follow, like and retweet the pinned post on X. Quote with "MINIONS" and tag 2 friends.'}
                     </p>
                     {c2 && <p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"8px 0 0" }}>Missions done</p>}
                   </FlipCard>
