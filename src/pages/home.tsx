@@ -29,11 +29,11 @@ const MINIONS = [
 
 /* ── Minion images for each class (facing left via scaleX(-1)) ── */
 const CLASS_MINIONS = [
-  "/Mini-10.jpg",  // Regulars
+  "/Mini-17.jpg",  // Regulars
   "/Mini-11.jpg",  // Cool Ones
   "/Mini-12.jpg",  // Wild Ones
-  "/Mini-13.jpg",  // Bosses
-  "/Mini-14.jpg",  // Originals
+  "/Mini-26.jpg",  // Bosses
+  "/Mini-22.jpg",  // Originals
 ];
 
 const CLASSES = [
