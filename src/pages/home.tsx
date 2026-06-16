@@ -29,11 +29,11 @@ const MINIONS = [
 
 /* ── Minion images for each class (facing left via scaleX(-1)) ── */
 const CLASS_MINIONS = [
-  "/Mini-17.jpg",  // Regulars
+  "/Mini-10.jpg",  // Regulars
   "/Mini-11.jpg",  // Cool Ones
   "/Mini-12.jpg",  // Wild Ones
-  "/Mini-26.jpg",  // Bosses
-  "/Mini-22.jpg",  // Originals
+  "/Mini-13.jpg",  // Bosses
+  "/Mini-14.jpg",  // Originals
 ];
 
 const CLASSES = [
@@ -262,15 +262,32 @@ export default function Home() {
   const [success,   setSuccess]   = useState(false);
   const [err,       setErr]       = useState("");
   const [ready,     setReady]     = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
 
+  /* ── Load from localStorage on mount ── */
   useEffect(() => {
     const l = document.createElement("link"); l.rel="stylesheet"; l.href=FONT_LINK;
     document.head.appendChild(l);
-    try { const s=localStorage.getItem("mn_v3"); if(s){const p=JSON.parse(s);setTasks(p.tasks??{});setWallet(p.wallet??"");setTwitter(p.twitter??"");setQuoteUrl(p.quoteUrl??"");} } catch {}
+    try { 
+      const s = localStorage.getItem("mn_v3"); 
+      if(s){
+        const p = JSON.parse(s);
+        setTasks(p.tasks ?? {});
+        setWallet(p.wallet ?? "");
+        setTwitter(p.twitter ?? "");
+        setQuoteUrl(p.quoteUrl ?? "");
+      }
+      /* Check if already submitted */
+      const submitted = localStorage.getItem("mn_submitted");
+      if (submitted === "true") setAlreadySubmitted(true);
+    } catch {}
     setTimeout(()=>setReady(true),80);
   },[]);
 
-  useEffect(()=>{ if(ready) localStorage.setItem("mn_v3",JSON.stringify({tasks,wallet,twitter,quoteUrl})); },[tasks,wallet,twitter,quoteUrl,ready]);
+  /* ── Persist to localStorage ── */
+  useEffect(()=>{ 
+    if(ready) localStorage.setItem("mn_v3", JSON.stringify({tasks, wallet, twitter, quoteUrl})); 
+  },[tasks, wallet, twitter, quoteUrl, ready]);
 
   /* ── Task confirmation states ── */
   const [twitterConfirmed, setTwitterConfirmed] = useState(false);
@@ -282,21 +299,45 @@ export default function Home() {
   const c2 = !!tasks["like"];
   const c3 = quoteConfirmed && isValidUrl(quoteUrl);
   const c4 = walletConfirmed && isValidEvm(wallet);
-  const allDone = c1&&c2&&c3&&c4;
+  const allDone = c1 && c2 && c3 && c4;
 
   async function submit() {
-    if(!allDone){setErr("Complete all missions first.");return;}
-    setErr(""); setSending(true);
-    const{error:e}=await supabase.from("minions").insert([{wallet:wallet.trim(),twitter:twitter.trim(),quote_url:quoteUrl.trim()}]);
+    if (!allDone) { setErr("Complete all missions first."); return; }
+    if (alreadySubmitted) { setErr("You have already submitted an application."); return; }
+    
+    setErr(""); 
+    setSending(true);
+    
+    const { error: e } = await supabase
+      .from("minions")
+      .insert([{ 
+        wallet: wallet.trim(), 
+        twitter: twitter.trim(), 
+        quote_url: quoteUrl.trim() 
+      }]);
+    
     setSending(false);
-    if(e) setErr("Something went wrong. Try again.");
-    else setSuccess(true);
+    
+    if (e) {
+      setErr("Something went wrong. Try again.");
+    } else {
+      setSuccess(true);
+      /* Mark as submitted in localStorage — prevents resubmit forever */
+      localStorage.setItem("mn_submitted", "true");
+      setAlreadySubmitted(true);
+    }
   }
 
-  function closeModal(){ setModalOpen(false); setSuccess(false); setErr(""); }
+  function closeModal(){ 
+    setModalOpen(false); 
+    if (!alreadySubmitted) {
+      setSuccess(false); 
+      setErr(""); 
+    }
+  }
 
-  function focusInp(e:React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
-  function blurInp(e:React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
+  function focusInp(e: React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
+  function blurInp(e: React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
 
   return (
     <div style={{ background:"#050504", minHeight:"100vh", fontFamily:sans, color:"#fff", overflowX:"hidden" }}>
@@ -709,7 +750,22 @@ export default function Home() {
           }}>
             <button onClick={closeModal} style={{ position:"absolute", top:"14px", right:"16px", background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.22)", fontSize:"1.1rem", lineHeight:1 }}>✕</button>
 
-            {success ? (
+            {/* Already submitted state — show instead of form */}
+            {alreadySubmitted ? (
+              <div style={{ textAlign:"center", padding:"36px 0" }}>
+                <div style={{ width:"54px", height:"54px", borderRadius:"50%", background:`${gold}33`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 18px" }}>
+                  <svg width="22" height="18" viewBox="0 0 22 18" fill="none"><path d="M2 9L8 15L20 2" stroke={gold} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <p style={{ fontFamily:sans, fontSize:"0.58rem", letterSpacing:"0.24em", textTransform:"uppercase", color:gold, margin:"0 0 6px" }}>Already Applied</p>
+                <h2 style={{ fontFamily:serif, fontSize:"1.5rem", fontWeight:700, color:"#fff", margin:"0 0 10px" }}>Application Received.</h2>
+                <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.9rem", color:"rgba(255,255,255,0.38)", margin:0, lineHeight:1.6 }}>
+                  Your spot has been saved. Selected wallets will be added before mint.
+                </p>
+                <button onClick={closeModal} style={{ marginTop:"24px", fontFamily:sans, fontSize:"0.68rem", fontWeight:700, letterSpacing:"0.16em", textTransform:"uppercase", color:"#050504", background:gold, border:"none", borderRadius:"6px", padding:"12px 28px", cursor:"pointer" }}>
+                  BACK TO HOME
+                </button>
+              </div>
+            ) : success ? (
               <div style={{ textAlign:"center", padding:"36px 0" }}>
                 <div style={{ width:"54px", height:"54px", borderRadius:"50%", background:gold, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 18px", animation:"stamp 0.5s cubic-bezier(0.23,1,0.32,1) both", boxShadow:`0 8px 24px ${gold}44` }}>
                   <svg width="22" height="18" viewBox="0 0 22 18" fill="none"><path d="M2 9L8 15L20 2" stroke="#0a0800" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -809,7 +865,7 @@ export default function Home() {
                       onFocus={focusInp} 
                       onBlur={blurInp} 
                     />
-                    {quoteUrl&&!isValidUrl(quoteUrl)&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Needs https://</p>}
+                    {quoteUrl&&!isValidUrl(quoteUrl)&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Needs https://</p>}
                     {!c3 && isValidUrl(quoteUrl) && (
                       <button 
                         onClick={e=>{ e.stopPropagation(); setQuoteConfirmed(true); }}
