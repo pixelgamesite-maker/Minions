@@ -27,13 +27,8 @@ const MINIONS = [
   "/Mini-25.jpg","/Mini-26.jpg","/Mini-27.jpg",
 ];
 
-/* ── Minion images for each class (facing left via scaleX(-1)) ── */
 const CLASS_MINIONS = [
-  "/Mini-10.jpg",  // Regulars
-  "/Mini-11.jpg",  // Cool Ones
-  "/Mini-12.jpg",  // Wild Ones
-  "/Mini-13.jpg",  // Bosses
-  "/Mini-14.jpg",  // Originals
+  "/Mini-10.jpg", "/Mini-11.jpg", "/Mini-12.jpg", "/Mini-13.jpg", "/Mini-14.jpg",
 ];
 
 const CLASSES = [
@@ -74,12 +69,17 @@ const FAQS = [
 
 function isValidEvm(a: string) { return /^0x[0-9a-fA-F]{40}$/.test(a.trim()); }
 function isValidUrl(u: string) {
-  try { return new URL(u.trim()).protocol === "https:"; } catch { return false; }
+  try { 
+    const url = new URL(u.trim());
+    return url.protocol === "https:" || url.protocol === "http:"; 
+  } catch { return false; }
 }
+
+const X_URL = "https://x.com/theminionxyz";
 
 /* ── Scroll-reveal hook ── */
 function useScrollReveal(threshold = 0.12) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -144,7 +144,7 @@ function FlipCard({ index, icon, title, subtitle, done, locked, children, onFlip
           boxShadow: locked?"none":`0 0 20px ${gold}11`,
         }}>
           <span style={{ fontSize:"1.4rem" }}>{locked ? "—" : icon}</span>
-          <p style={{ margin:0, fontFamily:serif, fontSize:"0.9rem", fontWeight:600, color: locked?"rgba(255,255,255,0.2)":goldLight, textAlign:"center", letterSpacing:"0.04em" }}>{title}</p>
+          <p style={{ margin:0, fontFamily:serif, fontSize:"0.9rem", fontWeight:600, color: locked?"rgba(255,255,255,0.2)":"#fff", textAlign:"center", letterSpacing:"0.04em" }}>{title}</p>
           {!locked && <p style={{ margin:0, fontFamily:sans, fontSize:"0.62rem", color:"rgba(255,255,255,0.3)", letterSpacing:"0.1em", textTransform:"uppercase" }}>Tap to open</p>}
         </div>
 
@@ -160,7 +160,7 @@ function FlipCard({ index, icon, title, subtitle, done, locked, children, onFlip
         }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"10px" }}>
             <div>
-              <p style={{ margin:0, fontFamily:serif, fontSize:"0.85rem", fontWeight:600, color:goldLight }}>{title}</p>
+              <p style={{ margin:0, fontFamily:serif, fontSize:"0.85rem", fontWeight:600, color:"#fff" }}>{title}</p>
               <p style={{ margin:"1px 0 0", fontFamily:sans, fontSize:"0.6rem", color:"rgba(255,255,255,0.3)", letterSpacing:"0.08em", textTransform:"uppercase" }}>{subtitle}</p>
             </div>
             {done && (
@@ -180,7 +180,7 @@ function FlipCard({ index, icon, title, subtitle, done, locked, children, onFlip
 function MinionGallery() {
   const [cur, setCur] = useState(0);
   const [fading, setFading] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<<ReturnType<<typeof setTimeout>>();
 
   useEffect(() => { timer.current = setTimeout(next, 3200); return () => clearTimeout(timer.current); }, [cur]);
 
@@ -197,7 +197,6 @@ function MinionGallery() {
       <div style={{ width:"100%", maxWidth:"340px", aspectRatio:"1/1", borderRadius:"16px", overflow:"hidden", border:`1px solid ${gold}22`, background:"#0a0a08" }}>
         <img src={MINIONS[cur]} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", opacity: fading?0:1, transition:"opacity 0.28s ease" }} />
       </div>
-      {/* Dot indicators only — no counter */}
       <div style={{ display:"flex", gap:"6px" }}>
         {MINIONS.map((_,i) => (
           <button key={i} onClick={()=>fade(i)} style={{ width: i===cur?"20px":"5px", height:"5px", borderRadius:"3px", background: i===cur?gold:"rgba(255,255,255,0.15)", border:"none", padding:0, cursor:"pointer", transition:"all 0.3s ease" }} />
@@ -213,7 +212,7 @@ function FaqItem({ q, a }: { q:string; a:string }) {
   return (
     <div style={{ borderBottom:`1px solid ${gold}22` }}>
       <button onClick={()=>setOpen(o=>!o)} style={{ width:"100%", background:"none", border:"none", cursor:"pointer", padding:"16px 0", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"12px" }}>
-        <span style={{ fontFamily:serif, fontSize:"1rem", fontWeight:600, color:open?goldLight:"rgba(255,255,255,0.75)", textAlign:"left", letterSpacing:"0.01em" }}>{q}</span>
+        <span style={{ fontFamily:serif, fontSize:"1rem", fontWeight:600, color:open?"#fff":"rgba(255,255,255,0.75)", textAlign:"left", letterSpacing:"0.01em" }}>{q}</span>
         <span style={{ color:gold, fontSize:"1.1rem", flexShrink:0, transition:"transform 0.25s", transform: open?"rotate(45deg)":"rotate(0)" }}>+</span>
       </button>
       {open && (
@@ -257,7 +256,7 @@ export default function Home() {
   const [twitter,   setTwitter]   = useState("");
   const [wallet,    setWallet]    = useState("");
   const [quoteUrl,  setQuoteUrl]  = useState("");
-  const [tasks,     setTasks]     = useState<Record<string,boolean>>({});
+  const [tasks,     setTasks]     = useState<<Record<string,boolean>>({});
   const [sending,   setSending]   = useState(false);
   const [success,   setSuccess]   = useState(false);
   const [err,       setErr]       = useState("");
@@ -277,7 +276,6 @@ export default function Home() {
         setTwitter(p.twitter ?? "");
         setQuoteUrl(p.quoteUrl ?? "");
       }
-      /* Check if already submitted */
       const submitted = localStorage.getItem("mn_submitted");
       if (submitted === "true") setAlreadySubmitted(true);
     } catch {}
@@ -294,7 +292,6 @@ export default function Home() {
   const [quoteConfirmed, setQuoteConfirmed] = useState(false);
   const [walletConfirmed, setWalletConfirmed] = useState(false);
 
-  /* Only confirm on Enter key or explicit action, not while typing */
   const c1 = twitterConfirmed && twitter.trim().length > 1;
   const c2 = !!tasks["like"];
   const c3 = quoteConfirmed && isValidUrl(quoteUrl);
@@ -322,7 +319,6 @@ export default function Home() {
       setErr("Something went wrong. Try again.");
     } else {
       setSuccess(true);
-      /* Mark as submitted in localStorage — prevents resubmit forever */
       localStorage.setItem("mn_submitted", "true");
       setAlreadySubmitted(true);
     }
@@ -336,8 +332,8 @@ export default function Home() {
     }
   }
 
-  function focusInp(e: React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
-  function blurInp(e: React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
+  function focusInp(e: React.FocusEvent<<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
+  function blurInp(e: React.FocusEvent<<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
 
   return (
     <div style={{ background:"#050504", minHeight:"100vh", fontFamily:sans, color:"#fff", overflowX:"hidden" }}>
@@ -368,13 +364,11 @@ export default function Home() {
         backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
         borderBottom:"1px solid rgba(255,255,255,0.06)",
       }}>
-        {/* Logo */}
         <a href="#home" style={{ display:"flex", alignItems:"center", gap:"10px", textDecoration:"none" }}>
           <img src="/mini-logo.jpg" style={{ width:"30px", height:"30px", borderRadius:"6px", objectFit:"cover" }} alt="" />
           <span style={{ fontFamily:serif, fontSize:"1.05rem", fontWeight:700, color:"#fff", letterSpacing:"0.1em" }}>MINIONS</span>
         </a>
 
-        {/* Nav */}
         <nav style={{ display:"flex", alignItems:"center", gap:"4px" }}>
           {([["MinoList","#minolist"],["Mint","#mint"]] as [string,string][]).map(([l,h])=>(
             <a key={l} href={h} style={{
@@ -387,7 +381,7 @@ export default function Home() {
             >{l}</a>
           ))}
           <div style={{ width:"1px", height:"16px", background:"rgba(255,255,255,0.1)", margin:"0 8px" }} />
-          <a href="https://x.com/theminionxyz" target="_blank" rel="noopener noreferrer"
+          <a href={X_URL} target="_blank" rel="noopener noreferrer"
             title="Follow on X"
             style={{ display:"flex", alignItems:"center", justifyContent:"center", width:"34px", height:"34px", borderRadius:"6px", color:"rgba(255,255,255,0.48)", border:"1px solid rgba(255,255,255,0.1)", transition:"all 0.2s", flexShrink:0 }}
             onMouseEnter={e=>{const el=e.currentTarget as HTMLAnchorElement;el.style.color="#fff";el.style.borderColor=`${gold}55`;el.style.background="rgba(255,255,255,0.04)";}}
@@ -401,7 +395,6 @@ export default function Home() {
 
       {/* ══════════ HERO ══════════ */}
       <div id="home" style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"110px 24px 80px", textAlign:"center", position:"relative" }}>
-        {/* ambient glows */}
         <div style={{ position:"absolute", top:"38%", left:"50%", transform:"translate(-50%,-50%)", width:"600px", height:"600px", borderRadius:"50%", background:`radial-gradient(circle,${gold}07 0%,transparent 68%)`, pointerEvents:"none" }} />
         <div style={{ position:"absolute", top:"65%", left:"25%", width:"280px", height:"280px", borderRadius:"50%", background:`radial-gradient(circle,#3a6a8822 0%,transparent 70%)`, pointerEvents:"none" }} />
 
@@ -430,8 +423,7 @@ export default function Home() {
 
         <div style={{ display:"flex", flexDirection:"column", gap:"10px", width:"100%", maxWidth:"300px",
           animation: ready?"fadeUp 0.7s ease 0.28s both":"none", opacity: ready?undefined:0 }}>
-          {/* JOIN MINOLIST — enhanced with pulse + shimmer */}
-          <button onClick={()=>setModalOpen(true)} className="join-btn" style={{
+          <button onClick={()=>setModalOpen(true)} style={{
             fontFamily:sans, fontSize:"0.72rem", fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase",
             color:"#050504", background:gold, border:"none", borderRadius:"8px",
             padding:"17px 36px", cursor:"pointer", transition:"all 0.2s ease",
@@ -458,13 +450,12 @@ export default function Home() {
             border:"1px solid rgba(255,255,255,0.12)", borderRadius:"8px",
             padding:"17px 36px", display:"block", textAlign:"center", transition:"all 0.2s ease",
           }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLAnchorElement).style.borderColor=`${gold}44`;(e.currentTarget as HTMLAnchorElement).style.color=goldLight;(e.currentTarget as HTMLAnchorElement).style.background="rgba(255,255,255,0.03)";}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLAnchorElement).style.borderColor=`${gold}44`;(e.currentTarget as HTMLAnchorElement).style.color="#fff";(e.currentTarget as HTMLAnchorElement).style.background="rgba(255,255,255,0.03)";}}
             onMouseLeave={e=>{(e.currentTarget as HTMLAnchorElement).style.borderColor="rgba(255,255,255,0.12)";(e.currentTarget as HTMLAnchorElement).style.color="rgba(255,255,255,0.52)";(e.currentTarget as HTMLAnchorElement).style.background="transparent";}}>
             VIEW MINT
           </a>
         </div>
 
-        {/* Stats bar */}
         <div style={{
           marginTop:"52px", display:"grid", gridTemplateColumns:"repeat(4,1fr)",
           border:`1px solid ${gold}1e`, borderRadius:"10px", overflow:"hidden",
@@ -473,13 +464,12 @@ export default function Home() {
         }}>
           {[["10,000","Supply"],["0.001 ETH","Mint Price"],["Ethereum","Chain"],["OpenSea","Launchpad"]].map(([val,lbl],i)=>(
             <div key={i} style={{ padding:"18px 16px", borderLeft: i>0?`1px solid ${gold}16`:"none", textAlign:"center" }}>
-              <p style={{ margin:0, fontFamily:serif, fontSize:"1.05rem", fontWeight:700, color:goldLight, letterSpacing:"0.02em" }}>{val}</p>
+              <p style={{ margin:0, fontFamily:serif, fontSize:"1.05rem", fontWeight:700, color:"#fff", letterSpacing:"0.02em" }}>{val}</p>
               <p style={{ margin:"3px 0 0", fontFamily:sans, fontSize:"0.52rem", letterSpacing:"0.16em", textTransform:"uppercase", color:"rgba(255,255,255,0.28)", fontWeight:500 }}>{lbl}</p>
             </div>
           ))}
         </div>
 
-        {/* Scroll cue */}
         <div style={{ position:"absolute", bottom:"36px", left:"50%", transform:"translateX(-50%)", display:"flex", flexDirection:"column", alignItems:"center", gap:"8px", opacity:0.35 }}>
           <span style={{ fontFamily:sans, fontSize:"0.48rem", letterSpacing:"0.3em", textTransform:"uppercase", color:gold }}>Scroll</span>
           <div style={{ width:"1px", height:"28px", background:`linear-gradient(180deg,${gold},transparent)` }} />
@@ -488,7 +478,6 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ MEET THE MINIONS ══════════ */}
       <RevealSection>
         <Label text="The Collection" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 16px", letterSpacing:"0.02em" }}>Meet The Minions</h2>
@@ -501,7 +490,6 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ THE TRAITS ══════════ */}
       <RevealSection bg="#07070600">
         <Label text="The Details" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 16px" }}>Built Different</h2>
@@ -516,7 +504,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.9rem", color:`${gold}99`, margin:"24px 0 0", lineHeight:1.6 }}>
+        <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.9rem", color:"rgba(255,255,255,0.5)", margin:"24px 0 0", lineHeight:1.6 }}>
           Some traits are simple. Some are rare. Some make a Minion stand out immediately.<br/>
           The goal is clean identity, not overcomplication.
         </p>
@@ -524,7 +512,6 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ THE CLASSES ══════════ */}
       <RevealSection>
         <Label text="The Types" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 32px" }}>Every Minion Has A Class</h2>
@@ -532,27 +519,18 @@ export default function Home() {
           {CLASSES.map((c,i)=>(
             <div key={c.name} style={{ padding:"20px 0", borderBottom:`1px solid ${gold}18`, display:"flex", justifyContent:"space-between", alignItems:"center", gap:"16px" }}>
               <div style={{ flex:1 }}>
-                <p style={{ margin:0, fontFamily:serif, fontSize:"1.1rem", fontWeight:600, color:goldLight }}>{c.name}</p>
+                <p style={{ margin:0, fontFamily:serif, fontSize:"1.1rem", fontWeight:600, color:"#fff" }}>{c.name}</p>
                 <p style={{ margin:"4px 0 0", fontFamily:serif, fontStyle:"italic", fontSize:"0.9rem", color:"rgba(255,255,255,0.4)", lineHeight:1.5 }}>{c.desc}</p>
               </div>
-              {/* Minion character facing left via scaleX(-1) */}
               <div style={{ position:"relative", flexShrink:0 }}>
                 <div style={{
                   width:"72px", height:"72px", borderRadius:"12px", overflow:"hidden",
                   border:`1px solid ${gold}22`, background:"#0a0a08",
                   transform: "scaleX(-1)",
                 }}>
-                  <img
-                    src={CLASS_MINIONS[i]}
-                    alt={c.name}
-                    style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}
-                  />
+                  <img src={CLASS_MINIONS[i]} alt={c.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
                 </div>
-                <div style={{
-                  position:"absolute", inset:0, borderRadius:"12px",
-                  boxShadow: `inset 0 0 20px ${gold}15`,
-                  pointerEvents:"none",
-                }} />
+                <div style={{ position:"absolute", inset:0, borderRadius:"12px", boxShadow: `inset 0 0 20px ${gold}15`, pointerEvents:"none" }} />
               </div>
               <span style={{ fontFamily:sans, fontSize:"0.58rem", letterSpacing:"0.18em", color:`${gold}66`, flexShrink:0, paddingTop:"4px" }}>
                 {String(i+1).padStart(2,"0")}
@@ -564,7 +542,6 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ JOIN THE MINOLIST ══════════ */}
       <section id="minolist" style={{ background:`linear-gradient(180deg,#050504 0%,#0e0c07 50%,#050504 100%)`, padding:"100px 0" }}>
         <div style={{ maxWidth:"680px", margin:"0 auto", padding:"0 24px", textAlign:"center" }}>
           <Label text="Access" />
@@ -574,7 +551,6 @@ export default function Home() {
             Apply through the website, complete missions, submit your wallet, and wait for selection.<br/>
             Selected wallets mint on OpenSea.
           </p>
-          {/* CLAIM YOUR SPOT — enhanced with pulse + shimmer */}
           <button onClick={()=>setModalOpen(true)} style={{
             marginTop:"24px",
             fontFamily:sans, fontSize:"0.75rem", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase",
@@ -602,7 +578,6 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ MINT ══════════ */}
       <RevealSection>
         <div id="mint" />
         <Label text="The Mint" />
@@ -613,7 +588,7 @@ export default function Home() {
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1px", border:`1px solid ${gold}22`, borderRadius:"10px", overflow:"hidden", marginBottom:"28px" }}>
           {[["10,000","Supply"],["0.001 ETH","Price"],["Ethereum","Chain"],["OpenSea","Launchpad"]].map(([v,l],i)=>(
             <div key={i} style={{ padding:"20px 18px", background:"rgba(255,255,255,0.02)", borderBottom: i<<2?`1px solid ${gold}18`:"none", borderRight: i%2===0?`1px solid ${gold}18`:"none" }}>
-              <p style={{ margin:0, fontFamily:serif, fontSize:"1.3rem", fontWeight:600, color:goldLight }}>{v}</p>
+              <p style={{ margin:0, fontFamily:serif, fontSize:"1.3rem", fontWeight:600, color:"#fff" }}>{v}</p>
               <p style={{ margin:"3px 0 0", fontFamily:sans, fontSize:"0.58rem", letterSpacing:"0.16em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)" }}>{l}</p>
             </div>
           ))}
@@ -632,7 +607,6 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ THE MINO RESERVE ══════════ */}
       <RevealSection>
         <Label text="Reserve" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 16px" }}>The Mino Reserve</h2>
@@ -644,10 +618,9 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ $MINO ══════════ */}
       <RevealSection bg="#07070600">
         <Label text="Token" />
-        <h2 style={{ fontFamily:serif, fontSize:"clamp(2.5rem,10vw,5rem)", fontWeight:700, color:goldLight, margin:"0 0 16px", letterSpacing:"0.04em" }}>$MINO</h2>
+        <h2 style={{ fontFamily:serif, fontSize:"clamp(2.5rem,10vw,5rem)", fontWeight:700, color:"#fff", margin:"0 0 16px", letterSpacing:"0.04em" }}>$MINO</h2>
         <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"1rem", color:"rgba(255,255,255,0.45)", lineHeight:1.8 }}>
           $MINO is the energy behind the Minions world.<br/>
           It is planned to power future holder systems, games, upgrades, raffles, burns, events, and community rewards.<br/>
@@ -657,7 +630,6 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ THE SYSTEMS ══════════ */}
       <RevealSection>
         <Label text="Systems" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 32px" }}>The Systems</h2>
@@ -665,7 +637,7 @@ export default function Home() {
           {SYSTEMS.map((s,i)=>(
             <div key={s.name} style={{ padding:"22px 0", borderBottom:`1px solid ${gold}18`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"16px" }}>
               <div>
-                <p style={{ margin:0, fontFamily:serif, fontSize:"1.1rem", fontWeight:600, color:goldLight }}>{s.name}</p>
+                <p style={{ margin:0, fontFamily:serif, fontSize:"1.1rem", fontWeight:600, color:"#fff" }}>{s.name}</p>
                 <p style={{ margin:"4px 0 0", fontFamily:serif, fontStyle:"italic", fontSize:"0.9rem", color:"rgba(255,255,255,0.4)", lineHeight:1.5 }}>{s.desc}</p>
               </div>
               <span style={{ fontFamily:sans, fontSize:"0.56rem", letterSpacing:"0.18em", color:`${gold}55`, flexShrink:0, paddingTop:"4px" }}>
@@ -678,12 +650,10 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ ROADMAP ══════════ */}
       <RevealSection bg="#07070600">
         <Label text="The Plan" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 36px" }}>What Comes After Mint</h2>
         <div style={{ position:"relative" }}>
-          {/* vertical line */}
           <div style={{ position:"absolute", left:"16px", top:0, bottom:0, width:"1px", background:`linear-gradient(180deg,${gold}44,${gold}11)` }} />
           <div style={{ display:"flex", flexDirection:"column", gap:"0" }}>
             {ROADMAP.map((r,i)=>(
@@ -691,7 +661,7 @@ export default function Home() {
                 <div style={{ position:"absolute", left:"10px", top:"4px", width:"13px", height:"13px", borderRadius:"50%", border:`1px solid ${gold}`, background:"#050504", flexShrink:0 }} />
                 <div>
                   <p style={{ margin:0, fontFamily:sans, fontSize:"0.58rem", letterSpacing:"0.2em", textTransform:"uppercase", color:gold, marginBottom:"4px" }}>{r.phase}</p>
-                  <p style={{ margin:0, fontFamily:serif, fontSize:"1rem", fontWeight:600, color:"rgba(255,255,255,0.85)" }}>{r.title}</p>
+                  <p style={{ margin:0, fontFamily:serif, fontSize:"1rem", fontWeight:600, color:"#fff" }}>{r.title}</p>
                   <p style={{ margin:"4px 0 0", fontFamily:serif, fontStyle:"italic", fontSize:"0.88rem", color:"rgba(255,255,255,0.38)", lineHeight:1.55 }}>{r.desc}</p>
                 </div>
               </div>
@@ -702,7 +672,6 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ FAQ ══════════ */}
       <RevealSection>
         <Label text="FAQ" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 32px" }}>Questions</h2>
@@ -713,18 +682,17 @@ export default function Home() {
 
       <Divider />
 
-      {/* ══════════ FOOTER ══════════ */}
       <footer style={{ padding:"60px 24px 40px", textAlign:"center" }}>
         <img src="/mini-logo.jpg" style={{ width:"44px", height:"44px", borderRadius:"8px", objectFit:"cover", marginBottom:"16px" }} alt="" />
-        <h3 style={{ fontFamily:serif, fontSize:"1.4rem", fontWeight:700, color:goldLight, margin:"0 0 6px", letterSpacing:"0.08em" }}>MINIONS</h3>
+        <h3 style={{ fontFamily:serif, fontSize:"1.4rem", fontWeight:700, color:"#fff", margin:"0 0 6px", letterSpacing:"0.08em" }}>MINIONS</h3>
         <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.88rem", color:"rgba(255,255,255,0.3)", margin:"0 0 24px", lineHeight:1.7 }}>
           Cute. Bold. Mainly for the cool ones.<br/>
           10,000 Minions on Ethereum. Powered by $MINO.
         </p>
         <div style={{ display:"flex", gap:"24px", justifyContent:"center", marginBottom:"36px" }}>
-          {[["X","https://x.com/theminionxyz"],["OpenSea","#"],["MinoList","#minolist"],["Mint","#mint"]].map(([l,h])=>(
+          {[["X",X_URL],["OpenSea","#"],["MinoList","#minolist"],["Mint","#mint"]].map(([l,h])=>(
             <a key={l} href={h} style={{ fontFamily:sans, fontSize:"0.68rem", letterSpacing:"0.14em", textTransform:"uppercase", color:`${gold}88`, transition:"color 0.2s" }}
-              onMouseEnter={e=>(e.currentTarget.style.color=goldLight)} onMouseLeave={e=>(e.currentTarget.style.color=`${gold}88`)}>
+              onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color=`${gold}88`)}>
               {l}
             </a>
           ))}
@@ -750,7 +718,6 @@ export default function Home() {
           }}>
             <button onClick={closeModal} style={{ position:"absolute", top:"14px", right:"16px", background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.22)", fontSize:"1.1rem", lineHeight:1 }}>✕</button>
 
-            {/* Already submitted state — show instead of form */}
             {alreadySubmitted ? (
               <div style={{ textAlign:"center", padding:"36px 0" }}>
                 <div style={{ width:"54px", height:"54px", borderRadius:"50%", background:`${gold}33`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 18px" }}>
@@ -781,14 +748,12 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {/* Header */}
                 <div style={{ marginBottom:"22px" }}>
                   <p style={{ fontFamily:sans, fontSize:"0.55rem", letterSpacing:"0.26em", textTransform:"uppercase", color:gold, margin:"0 0 4px" }}>Minolist Application</p>
                   <h2 style={{ fontFamily:serif, fontSize:"1.5rem", fontWeight:700, color:"#fff", margin:"0 0 4px", letterSpacing:"0.02em" }}>Claim Your Spot</h2>
                   <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.82rem", color:"rgba(255,255,255,0.35)", margin:"0 0 14px", lineHeight:1.5 }}>
                     Complete the missions and submit your wallet for MinoList review.
                   </p>
-                  {/* progress bar */}
                   <div style={{ height:"2px", background:`${gold}18`, borderRadius:"2px", overflow:"hidden" }}>
                     <div style={{ height:"100%", borderRadius:"2px", background:`linear-gradient(90deg,${gold},${goldLight})`, width:`${([c1,c2,c3,c4].filter(Boolean).length/4)*100}%`, transition:"width 0.4s ease" }} />
                   </div>
@@ -797,10 +762,9 @@ export default function Home() {
                   </p>
                 </div>
 
-                {/* 2×2 cards */}
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px", marginBottom:"16px" }}>
 
-                  {/* Card 1 — X Handle (requires Enter to confirm) */}
+                  {/* Card 1 — X Handle */}
                   <FlipCard index={0} icon="𝕏" title="Who Are You?" subtitle="Mission 01 / 04" done={c1} locked={false}>
                     <p style={{ margin:"0 0 7px", fontFamily:sans, fontSize:"0.62rem", color:`${gold}88`, letterSpacing:"0.1em", textTransform:"uppercase" }}>Your X handle</p>
                     <input 
@@ -818,20 +782,10 @@ export default function Home() {
                       <button 
                         onClick={e=>{ e.stopPropagation(); setTwitterConfirmed(true); }}
                         style={{
-                          marginTop:"8px",
-                          width:"100%",
-                          background:`${gold}22`,
-                          color:gold,
-                          border:`1px solid ${gold}44`,
-                          borderRadius:"4px",
-                          padding:"6px",
-                          fontFamily:sans,
-                          fontSize:"0.62rem",
-                          fontWeight:700,
-                          letterSpacing:"0.1em",
-                          textTransform:"uppercase",
-                          cursor:"pointer",
-                          transition:"all 0.2s",
+                          marginTop:"8px", width:"100%", background:`${gold}22`, color:gold,
+                          border:`1px solid ${gold}44`, borderRadius:"4px", padding:"6px",
+                          fontFamily:sans, fontSize:"0.62rem", fontWeight:700, letterSpacing:"0.1em",
+                          textTransform:"uppercase", cursor:"pointer", transition:"all 0.2s",
                         }}
                         onMouseEnter={e=>{ (e.currentTarget as HTMLButtonElement).style.background=gold; (e.currentTarget as HTMLButtonElement).style.color="#050504"; }}
                         onMouseLeave={e=>{ (e.currentTarget as HTMLButtonElement).style.background=`${gold}22`; (e.currentTarget as HTMLButtonElement).style.color=gold; }}
@@ -842,59 +796,58 @@ export default function Home() {
                     {c1 && <p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"5px 0 0" }}>Identity confirmed</p>}
                   </FlipCard>
 
-                  {/* Card 2 — Like & RT */}
-                  <FlipCard index={1} icon="↺" title="Complete Missions" subtitle="Mission 02 / 04" done={c2} locked={!c1}
-                    onFlip={()=>{ window.open("https://x.com/theminionxyz","_blank"); setTimeout(()=>setTasks(p=>({...p,like:true})),800); }}>
+                  {/* Card 2 — Like & Tag 2 friends */}
+                  <FlipCard index={1} icon="↺" title="Like & Tag 2 Frens" subtitle="Mission 02 / 04" done={c2} locked={!c1}
+                    onFlip={()=>{ window.open(X_URL,"_blank"); setTimeout(()=>setTasks(p=>({...p,like:true})),800); }}>
                     <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.78rem", color:"rgba(255,255,255,0.5)", margin:0, lineHeight:1.5 }}>
-                      {c2 ? "Like & retweet confirmed." : 'Follow, like and retweet the pinned post on X. Quote with "MINIONS" and tag 2 friends.'}
+                      {c2 ? "Like & comment confirmed." : 'Like the pinned post and tag 2 friends in the comments on X.'}
                     </p>
                     {c2 && <p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"8px 0 0" }}>Missions done</p>}
                   </FlipCard>
 
-                  {/* Card 3 — Quote link (requires Enter to confirm) */}
-                  <FlipCard index={2} icon="↗" title="Verify Quote" subtitle="Mission 03 / 04" done={c3} locked={!c2}>
-                    <p style={{ margin:"0 0 7px", fontFamily:sans, fontSize:"0.62rem", color:`${gold}88`, letterSpacing:"0.1em", textTransform:"uppercase" }}>Quote tweet link</p>
-                    <input 
-                      type="url" 
-                      placeholder="https://x.com/yourhandle/status/..." 
-                      value={quoteUrl} 
-                      onChange={e=>setQuoteUrl(e.target.value)} 
-                      onKeyDown={e=>{ if(e.key==="Enter" && isValidUrl(quoteUrl)) setQuoteConfirmed(true); }}
-                      onClick={e=>e.stopPropagation()} 
-                      style={inp} 
-                      onFocus={focusInp} 
-                      onBlur={blurInp} 
-                    />
-                    {quoteUrl&&!isValidUrl(quoteUrl)&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Needs https://</p>}
-                    {!c3 && isValidUrl(quoteUrl) && (
-                      <button 
-                        onClick={e=>{ e.stopPropagation(); setQuoteConfirmed(true); }}
-                        style={{
-                          marginTop:"8px",
-                          width:"100%",
-                          background:`${gold}22`,
-                          color:gold,
-                          border:`1px solid ${gold}44`,
-                          borderRadius:"4px",
-                          padding:"6px",
-                          fontFamily:sans,
-                          fontSize:"0.62rem",
-                          fontWeight:700,
-                          letterSpacing:"0.1em",
-                          textTransform:"uppercase",
-                          cursor:"pointer",
-                          transition:"all 0.2s",
-                        }}
-                        onMouseEnter={e=>{ (e.currentTarget as HTMLButtonElement).style.background=gold; (e.currentTarget as HTMLButtonElement).style.color="#050504"; }}
-                        onMouseLeave={e=>{ (e.currentTarget as HTMLButtonElement).style.background=`${gold}22`; (e.currentTarget as HTMLButtonElement).style.color=gold; }}
-                      >
-                        Verify Link
-                      </button>
+                  {/* Card 3 — Quote Pinned Tweet (opens X first, then shows link input) */}
+                  <FlipCard index={2} icon="↗" title="Quote Pinned Tweet" subtitle="Mission 03 / 04" done={c3} locked={!c2}
+                    onFlip={()=>{ window.open(X_URL,"_blank"); }}>
+                    {!c3 ? (
+                      <>
+                        <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.78rem", color:"rgba(255,255,255,0.5)", margin:0, lineHeight:1.5 }}>
+                          Quote the pinned tweet on X with "MINIONS" and tag 2 friends. Then paste your quote link below.
+                        </p>
+                        <p style={{ margin:"8px 0 0", fontFamily:sans, fontSize:"0.62rem", color:`${gold}88`, letterSpacing:"0.1em", textTransform:"uppercase" }}>Quote tweet link</p>
+                        <input 
+                          type="url" 
+                          placeholder="https://x.com/yourhandle/status/..." 
+                          value={quoteUrl} 
+                          onChange={e=>setQuoteUrl(e.target.value)} 
+                          onKeyDown={e=>{ if(e.key==="Enter" && isValidUrl(quoteUrl)) setQuoteConfirmed(true); }}
+                          onClick={e=>e.stopPropagation()} 
+                          style={inp} 
+                          onFocus={focusInp} 
+                          onBlur={blurInp} 
+                        />
+                        {quoteUrl && !isValidUrl(quoteUrl) && <p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Needs valid http:// or https:// link</p>}
+                        {isValidUrl(quoteUrl) && (
+                          <button 
+                            onClick={e=>{ e.stopPropagation(); setQuoteConfirmed(true); }}
+                            style={{
+                              marginTop:"8px", width:"100%", background:`${gold}22`, color:gold,
+                              border:`1px solid ${gold}44`, borderRadius:"4px", padding:"6px",
+                              fontFamily:sans, fontSize:"0.62rem", fontWeight:700, letterSpacing:"0.1em",
+                              textTransform:"uppercase", cursor:"pointer", transition:"all 0.2s",
+                            }}
+                            onMouseEnter={e=>{ (e.currentTarget as HTMLButtonElement).style.background=gold; (e.currentTarget as HTMLButtonElement).style.color="#050504"; }}
+                            onMouseLeave={e=>{ (e.currentTarget as HTMLButtonElement).style.background=`${gold}22`; (e.currentTarget as HTMLButtonElement).style.color=gold; }}
+                          >
+                            Verify Link
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:0 }}>Quote verified</p>
                     )}
-                    {c3&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Link verified</p>}
                   </FlipCard>
 
-                  {/* Card 4 — Wallet (requires Enter to confirm) */}
+                  {/* Card 4 — Wallet */}
                   <FlipCard index={3} icon="◈" title="Claim Wallet" subtitle="Mission 04 / 04" done={c4} locked={!c3}>
                     <p style={{ margin:"0 0 7px", fontFamily:sans, fontSize:"0.62rem", color:`${gold}88`, letterSpacing:"0.1em", textTransform:"uppercase" }}>EVM address</p>
                     <input 
@@ -908,25 +861,15 @@ export default function Home() {
                       onFocus={focusInp} 
                       onBlur={blurInp} 
                     />
-                    {wallet&&!isValidEvm(wallet)&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Invalid address</p>}
+                    {wallet && !isValidEvm(wallet) && <p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Invalid address</p>}
                     {!c4 && isValidEvm(wallet) && (
                       <button 
                         onClick={e=>{ e.stopPropagation(); setWalletConfirmed(true); }}
                         style={{
-                          marginTop:"8px",
-                          width:"100%",
-                          background:`${gold}22`,
-                          color:gold,
-                          border:`1px solid ${gold}44`,
-                          borderRadius:"4px",
-                          padding:"6px",
-                          fontFamily:sans,
-                          fontSize:"0.62rem",
-                          fontWeight:700,
-                          letterSpacing:"0.1em",
-                          textTransform:"uppercase",
-                          cursor:"pointer",
-                          transition:"all 0.2s",
+                          marginTop:"8px", width:"100%", background:`${gold}22`, color:gold,
+                          border:`1px solid ${gold}44`, borderRadius:"4px", padding:"6px",
+                          fontFamily:sans, fontSize:"0.62rem", fontWeight:700, letterSpacing:"0.1em",
+                          textTransform:"uppercase", cursor:"pointer", transition:"all 0.2s",
                         }}
                         onMouseEnter={e=>{ (e.currentTarget as HTMLButtonElement).style.background=gold; (e.currentTarget as HTMLButtonElement).style.color="#050504"; }}
                         onMouseLeave={e=>{ (e.currentTarget as HTMLButtonElement).style.background=`${gold}22`; (e.currentTarget as HTMLButtonElement).style.color=gold; }}
@@ -934,28 +877,28 @@ export default function Home() {
                         Confirm Wallet
                       </button>
                     )}
-                    {c4&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Wallet confirmed</p>}
+                    {c4 && <p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Wallet confirmed</p>}
                     <p style={{ fontFamily:sans, fontSize:"0.58rem", color:"rgba(255,255,255,0.2)", margin:"6px 0 0", lineHeight:1.4 }}>Never share private keys or seed phrases.</p>
                   </FlipCard>
 
                 </div>
 
-                {err&&<p style={{ fontFamily:sans, fontSize:"0.78rem", color:"#e05050", margin:"0 0 10px", fontWeight:500 }}>{err}</p>}
+                {err && <p style={{ fontFamily:sans, fontSize:"0.78rem", color:"#e05050", margin:"0 0 10px", fontWeight:500 }}>{err}</p>}
 
-                <button onClick={submit} disabled={sending||!allDone} style={{
+                <button onClick={submit} disabled={sending || !allDone} style={{
                   width:"100%",
                   background: allDone ? gold : "rgba(255,255,255,0.04)",
                   color: allDone ? "#050504" : "rgba(255,255,255,0.18)",
                   border: `1px solid ${allDone ? gold : "rgba(255,255,255,0.06)"}`,
                   borderRadius:"6px", padding:"15px",
                   fontFamily:sans, fontSize:"0.72rem", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase",
-                  cursor: allDone&&!sending ? "pointer" : "not-allowed",
+                  cursor: allDone && !sending ? "pointer" : "not-allowed",
                   transition:"all 0.3s ease",
                   boxShadow: allDone ? `0 8px 24px ${gold}33` : "none",
                 }}
                   onMouseEnter={e=>{ if(allDone)(e.currentTarget as HTMLButtonElement).style.background=goldLight; }}
                   onMouseLeave={e=>{ if(allDone)(e.currentTarget as HTMLButtonElement).style.background=gold; }}
-                  onMouseDown={e=>allDone&&((e.currentTarget as HTMLButtonElement).style.transform="scale(0.98)")}
+                  onMouseDown={e=>allDone && ((e.currentTarget as HTMLButtonElement).style.transform="scale(0.98)")}
                   onMouseUp={e=>((e.currentTarget as HTMLButtonElement).style.transform="")}
                 >
                   {sending ? "Saving..." : allDone ? "JOIN THE MINOLIST" : "Complete all missions to unlock"}
