@@ -809,7 +809,7 @@ export default function Home() {
                       onFocus={focusInp} 
                       onBlur={blurInp} 
                     />
-                    {quoteUrl&&!isValidUrl(quoteUrl)&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Needs https://</p>}
+                    {quoteUrl&&!isValidUrl(quoteUrl)&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Needs https://</p>}
                     {!c3 && isValidUrl(quoteUrl) && (
                       <button 
                         onClick={e=>{ e.stopPropagation(); setQuoteConfirmed(true); }}
@@ -852,7 +852,7 @@ export default function Home() {
                       onFocus={focusInp} 
                       onBlur={blurInp} 
                     />
-                    {wallet&&!isValidEvm(wallet)&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Invalid address</p>}
+                    {wallet&&!isValidEvm(wallet)&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Invalid address</p>}
                     {!c4 && isValidEvm(wallet) && (
                       <button 
                         onClick={e=>{ e.stopPropagation(); setWalletConfirmed(true); }}
@@ -878,13 +878,13 @@ export default function Home() {
                         Confirm Wallet
                       </button>
                     )}
-                    {c4&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Wallet confirmed</p>}
+                    {c4&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Wallet confirmed</p>}
                     <p style={{ fontFamily:sans, fontSize:"0.58rem", color:"rgba(255,255,255,0.2)", margin:"6px 0 0", lineHeight:1.4 }}>Never share private keys or seed phrases.</p>
                   </FlipCard>
 
                 </div>
 
-                {err&&<<p style={{ fontFamily:sans, fontSize:"0.78rem", color:"#e05050", margin:"0 0 10px", fontWeight:500 }}>{err}</p>}
+                {err&&<p style={{ fontFamily:sans, fontSize:"0.78rem", color:"#e05050", margin:"0 0 10px", fontWeight:500 }}>{err}</p>}
 
                 <button onClick={submit} disabled={sending||!allDone} style={{
                   width:"100%",
