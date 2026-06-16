@@ -79,7 +79,7 @@ const X_URL = "https://x.com/theminionxyz";
 
 /* ── Scroll-reveal hook ── */
 function useScrollReveal(threshold = 0.12) {
-  const ref = useRef<<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
