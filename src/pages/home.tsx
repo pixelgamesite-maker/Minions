@@ -17,8 +17,7 @@ const goldLight = "#8ec5df";
 
 const MINIONS = [
   "/Mini-1.jpg","/Mini-2.jpg","/Mini-3.jpg",
-  "/Mini-4.jpg","/Mini-5.jpg","/Mini-6.jpg",
-  "/Mini-7.jpg","/Mini-8.jpg","/Mini-9.jpg",
+  "/Mini-4.jpg",
   "/Mini-10.jpg","/Mini-11.jpg","/Mini-12.jpg",
   "/Mini-13.jpg","/Mini-14.jpg","/Mini-15.jpg",
   "/Mini-16.jpg","/Mini-17.jpg","/Mini-18.jpg",
