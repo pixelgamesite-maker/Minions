@@ -256,7 +256,7 @@ export default function Home() {
   const [twitter,   setTwitter]   = useState("");
   const [wallet,    setWallet]    = useState("");
   const [quoteUrl,  setQuoteUrl]  = useState("");
-  const [tasks,     setTasks]     = useState<<Record<string,boolean>>({});
+  const [tasks,     setTasks]     = useState<Record<string,boolean>>({});
   const [sending,   setSending]   = useState(false);
   const [success,   setSuccess]   = useState(false);
   const [err,       setErr]       = useState("");
