@@ -257,7 +257,7 @@ export default function Home() {
   const [twitter,   setTwitter]   = useState("");
   const [wallet,    setWallet]    = useState("");
   const [quoteUrl,  setQuoteUrl]  = useState("");
-  const [tasks,     setTasks]     = useState<<Record<string,boolean>>({});
+  const [tasks,     setTasks]     = useState<Record<string,boolean>>({});
   const [sending,   setSending]   = useState(false);
   const [success,   setSuccess]   = useState(false);
   const [err,       setErr]       = useState("");
@@ -295,8 +295,8 @@ export default function Home() {
 
   function closeModal(){ setModalOpen(false); setSuccess(false); setErr(""); }
 
-  function focusInp(e:React.FocusEvent<<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
-  function blurInp(e:React.FocusEvent<<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
+  function focusInp(e:React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
+  function blurInp(e:React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
 
   return (
     <div style={{ background:"#050504", minHeight:"100vh", fontFamily:sans, color:"#fff", overflowX:"hidden" }}>
