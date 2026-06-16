@@ -21,6 +21,15 @@ const MINIONS = [
   "/Mini-7.jpg","/Mini-8.jpg","/Mini-9.jpg",
 ];
 
+/* ── Minion images for each class (facing left via scaleX(-1)) ── */
+const CLASS_MINIONS = [
+  "/Mini-10.jpg",  // Regulars
+  "/Mini-11.jpg",  // Cool Ones
+  "/Mini-12.jpg",  // Wild Ones
+  "/Mini-13.jpg",  // Bosses
+  "/Mini-14.jpg",  // Originals
+];
+
 const CLASSES = [
   { name:"Regulars",   desc:"Clean, simple, and easy to love." },
   { name:"Cool Ones",  desc:"Extra style, stronger attitude, cleaner presence." },
@@ -60,6 +69,25 @@ const FAQS = [
 function isValidEvm(a: string) { return /^0x[0-9a-fA-F]{40}$/.test(a.trim()); }
 function isValidUrl(u: string) {
   try { return new URL(u.trim()).protocol === "https:"; } catch { return false; }
+}
+
+/* ── Scroll-reveal hook ── */
+function useScrollReveal(threshold = 0.12) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.unobserve(el); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+
+  return { ref, visible };
 }
 
 /* ── Section label ── */
@@ -199,6 +227,25 @@ const inp: React.CSSProperties = {
   fontFamily:sans, outline:"none", transition:"border 0.2s", boxSizing:"border-box",
 };
 
+/* ── Scroll-reveal section wrapper ── */
+function RevealSection({ children, bg = "#050504", extra, delay = 0 }: {
+  children: React.ReactNode; bg?: string; extra?: React.CSSProperties; delay?: number;
+}) {
+  const { ref, visible } = useScrollReveal();
+  return (
+    <section ref={ref} style={{
+      background: bg, padding:"80px 0", position:"relative", ...extra,
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(40px)",
+      transition: `opacity 0.7s ease ${delay}s, transform 0.7s ease ${delay}s`,
+    }}>
+      <div style={{ maxWidth:"680px", margin:"0 auto", padding:"0 24px" }}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
 /* ════════════════════════════════════════════ MAIN ═══════════════════════════════════════════ */
 export default function Home() {
   const [menuOpen,  setMenuOpen]  = useState(false);
@@ -241,15 +288,6 @@ export default function Home() {
   function focusInp(e:React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
   function blurInp(e:React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
 
-  /* shared section wrapper */
-  const section = (children: React.ReactNode, bg="#050504", extra?: React.CSSProperties) => (
-    <section style={{ background:bg, padding:"80px 0", position:"relative", ...extra }}>
-      <div style={{ maxWidth:"680px", margin:"0 auto", padding:"0 24px" }}>
-        {children}
-      </div>
-    </section>
-  );
-
   return (
     <div style={{ background:"#050504", minHeight:"100vh", fontFamily:sans, color:"#fff", overflowX:"hidden" }}>
 
@@ -259,6 +297,8 @@ export default function Home() {
         @keyframes modalIn { from{opacity:0;transform:scale(0.96) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
         @keyframes stamp { 0%{transform:scale(0) rotate(-15deg);opacity:0} 70%{transform:scale(1.12) rotate(3deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
         @keyframes menuSlide { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulseGlow { 0%{box-shadow:0 0 0 0 ${gold}44, 0 10px 36px ${gold}36} 50%{box-shadow:0 0 20px 4px ${gold}33, 0 10px 36px ${gold}36} 100%{box-shadow:0 0 0 0 ${gold}44, 0 10px 36px ${gold}36} }
+        @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
         *{box-sizing:border-box;}
         ::placeholder{color:rgba(255,255,255,0.2);}
         ::-webkit-scrollbar{width:3px;}
@@ -339,16 +379,27 @@ export default function Home() {
 
         <div style={{ display:"flex", flexDirection:"column", gap:"10px", width:"100%", maxWidth:"300px",
           animation: ready?"fadeUp 0.7s ease 0.28s both":"none", opacity: ready?undefined:0 }}>
-          <button onClick={()=>setModalOpen(true)} style={{
+          {/* JOIN MINOLIST — enhanced with pulse + shimmer */}
+          <button onClick={()=>setModalOpen(true)} className="join-btn" style={{
             fontFamily:sans, fontSize:"0.72rem", fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase",
             color:"#050504", background:gold, border:"none", borderRadius:"8px",
             padding:"17px 36px", cursor:"pointer", transition:"all 0.2s ease",
             boxShadow:`0 10px 36px ${gold}36`,
+            animation: "pulseGlow 2.5s ease-in-out infinite",
+            position: "relative",
+            overflow: "hidden",
           }}
             onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background=goldLight;(e.currentTarget as HTMLButtonElement).style.transform="translateY(-2px)";(e.currentTarget as HTMLButtonElement).style.boxShadow=`0 16px 40px ${gold}44`;}}
             onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background=gold;(e.currentTarget as HTMLButtonElement).style.transform="";(e.currentTarget as HTMLButtonElement).style.boxShadow=`0 10px 36px ${gold}36`;}}
           >
-            JOIN MINOLIST
+            <span style={{ position:"relative", zIndex:2 }}>JOIN MINOLIST</span>
+            <span style={{
+              position:"absolute", inset:0,
+              background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)`,
+              backgroundSize: "200% 100%",
+              animation: "shimmer 3s ease-in-out infinite",
+              zIndex:1,
+            }} />
           </button>
           <a href="#mint" style={{
             fontFamily:sans, fontSize:"0.72rem", fontWeight:600, letterSpacing:"0.2em", textTransform:"uppercase",
@@ -387,7 +438,7 @@ export default function Home() {
       <Divider />
 
       {/* ══════════ MEET THE MINIONS ══════════ */}
-      {section(<>
+      <RevealSection>
         <Label text="The Collection" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 16px", letterSpacing:"0.02em" }}>Meet The Minions</h2>
         <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"1rem", color:"rgba(255,255,255,0.45)", margin:"0 0 40px", lineHeight:1.7 }}>
@@ -395,12 +446,12 @@ export default function Home() {
           Minions is a 10,000 supply character collection built around simple art, clean and noticeable traits.
         </p>
         <MinionGallery />
-      </>, "#050504")}
+      </RevealSection>
 
       <Divider />
 
       {/* ══════════ THE TRAITS ══════════ */}
-      {section(<>
+      <RevealSection bg="#07070600">
         <Label text="The Details" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 16px" }}>Built Different</h2>
         <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"1rem", color:"rgba(255,255,255,0.45)", margin:"0 0 32px", lineHeight:1.7 }}>
@@ -418,20 +469,39 @@ export default function Home() {
           Some traits are simple. Some are rare. Some make a Minion stand out immediately.<br/>
           The goal is clean identity, not overcomplication.
         </p>
-      </>, "#07070600")}
+      </RevealSection>
 
       <Divider />
 
       {/* ══════════ THE CLASSES ══════════ */}
-      {section(<>
+      <RevealSection>
         <Label text="The Types" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 32px" }}>Every Minion Has A Class</h2>
         <div style={{ display:"flex", flexDirection:"column", gap:"0" }}>
           {CLASSES.map((c,i)=>(
-            <div key={c.name} style={{ padding:"20px 0", borderBottom:`1px solid ${gold}18`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"16px" }}>
-              <div>
+            <div key={c.name} style={{ padding:"20px 0", borderBottom:`1px solid ${gold}18`, display:"flex", justifyContent:"space-between", alignItems:"center", gap:"16px" }}>
+              <div style={{ flex:1 }}>
                 <p style={{ margin:0, fontFamily:serif, fontSize:"1.1rem", fontWeight:600, color:goldLight }}>{c.name}</p>
                 <p style={{ margin:"4px 0 0", fontFamily:serif, fontStyle:"italic", fontSize:"0.9rem", color:"rgba(255,255,255,0.4)", lineHeight:1.5 }}>{c.desc}</p>
+              </div>
+              {/* Minion character facing left via scaleX(-1) */}
+              <div style={{ position:"relative", flexShrink:0 }}>
+                <div style={{
+                  width:"72px", height:"72px", borderRadius:"12px", overflow:"hidden",
+                  border:`1px solid ${gold}22`, background:"#0a0a08",
+                  transform: "scaleX(-1)",
+                }}>
+                  <img
+                    src={CLASS_MINIONS[i]}
+                    alt={c.name}
+                    style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}
+                  />
+                </div>
+                <div style={{
+                  position:"absolute", inset:0, borderRadius:"12px",
+                  boxShadow: `inset 0 0 20px ${gold}15`,
+                  pointerEvents:"none",
+                }} />
               </div>
               <span style={{ fontFamily:sans, fontSize:"0.58rem", letterSpacing:"0.18em", color:`${gold}66`, flexShrink:0, paddingTop:"4px" }}>
                 {String(i+1).padStart(2,"0")}
@@ -439,7 +509,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </>)}
+      </RevealSection>
 
       <Divider />
 
@@ -453,17 +523,28 @@ export default function Home() {
             Apply through the website, complete missions, submit your wallet, and wait for selection.<br/>
             Selected wallets mint on OpenSea.
           </p>
+          {/* CLAIM YOUR SPOT — enhanced with pulse + shimmer */}
           <button onClick={()=>setModalOpen(true)} style={{
             marginTop:"24px",
             fontFamily:sans, fontSize:"0.75rem", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase",
             color:"#050504", background:gold, border:"none", borderRadius:"6px",
             padding:"16px 40px", cursor:"pointer", transition:"background 0.2s, transform 0.15s",
             boxShadow:`0 8px 32px ${gold}33`,
+            animation: "pulseGlow 2.5s ease-in-out infinite",
+            position: "relative",
+            overflow: "hidden",
           }}
             onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background=goldLight;(e.currentTarget as HTMLButtonElement).style.transform="translateY(-2px)";}}
             onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background=gold;(e.currentTarget as HTMLButtonElement).style.transform="";}}
           >
-            CLAIM YOUR SPOT
+            <span style={{ position:"relative", zIndex:2 }}>CLAIM YOUR SPOT</span>
+            <span style={{
+              position:"absolute", inset:0,
+              background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)`,
+              backgroundSize: "200% 100%",
+              animation: "shimmer 3s ease-in-out infinite",
+              zIndex:1,
+            }} />
           </button>
         </div>
       </section>
@@ -471,7 +552,7 @@ export default function Home() {
       <Divider />
 
       {/* ══════════ MINT ══════════ */}
-      {section(<>
+      <RevealSection>
         <div id="mint" />
         <Label text="The Mint" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 16px" }}>One Phase. One Mint.</h2>
@@ -496,24 +577,24 @@ export default function Home() {
         <p style={{ fontFamily:sans, fontSize:"0.7rem", color:`${gold}66`, textAlign:"center", margin:"12px 0 0", letterSpacing:"0.1em" }}>
           Mint link: Coming soon
         </p>
-      </>)}
+      </RevealSection>
 
       <Divider />
 
       {/* ══════════ THE MINO RESERVE ══════════ */}
-      {section(<>
+      <RevealSection>
         <Label text="Reserve" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 16px" }}>The Mino Reserve</h2>
         <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"1rem", color:"rgba(255,255,255,0.45)", lineHeight:1.8 }}>
           A small allocation kept for collabs, rewards, partnerships, future activations, and community support.<br/>
           This is not a public mint phase.
         </p>
-      </>)}
+      </RevealSection>
 
       <Divider />
 
       {/* ══════════ $MINO ══════════ */}
-      {section(<>
+      <RevealSection bg="#07070600">
         <Label text="Token" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2.5rem,10vw,5rem)", fontWeight:700, color:goldLight, margin:"0 0 16px", letterSpacing:"0.04em" }}>$MINO</h2>
         <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"1rem", color:"rgba(255,255,255,0.45)", lineHeight:1.8 }}>
@@ -521,12 +602,12 @@ export default function Home() {
           It is planned to power future holder systems, games, upgrades, raffles, burns, events, and community rewards.<br/>
           Full token details will be shared after mint.
         </p>
-      </>, "#07070600")}
+      </RevealSection>
 
       <Divider />
 
       {/* ══════════ THE SYSTEMS ══════════ */}
-      {section(<>
+      <RevealSection>
         <Label text="Systems" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 32px" }}>The Systems</h2>
         <div style={{ display:"flex", flexDirection:"column", gap:"0" }}>
@@ -542,12 +623,12 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </>)}
+      </RevealSection>
 
       <Divider />
 
       {/* ══════════ ROADMAP ══════════ */}
-      {section(<>
+      <RevealSection bg="#07070600">
         <Label text="The Plan" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 36px" }}>What Comes After Mint</h2>
         <div style={{ position:"relative" }}>
@@ -566,18 +647,18 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </>, "#07070600")}
+      </RevealSection>
 
       <Divider />
 
       {/* ══════════ FAQ ══════════ */}
-      {section(<>
+      <RevealSection>
         <Label text="FAQ" />
         <h2 style={{ fontFamily:serif, fontSize:"clamp(2rem,7vw,3.2rem)", fontWeight:700, color:"#fff", margin:"0 0 32px" }}>Questions</h2>
         <div>
           {FAQS.map(f=><FaqItem key={f.q} q={f.q} a={f.a} />)}
         </div>
-      </>)}
+      </RevealSection>
 
       <Divider />
 
