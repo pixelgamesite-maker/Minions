@@ -180,7 +180,7 @@ function FlipCard({ index, icon, title, subtitle, done, locked, children, onFlip
 function MinionGallery() {
   const [cur, setCur] = useState(0);
   const [fading, setFading] = useState(false);
-  const timer = useRef<<ReturnType<<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => { timer.current = setTimeout(next, 3200); return () => clearTimeout(timer.current); }, [cur]);
 
