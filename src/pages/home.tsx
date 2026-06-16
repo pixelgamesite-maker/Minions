@@ -180,7 +180,7 @@ function FlipCard({ index, icon, title, subtitle, done, locked, children, onFlip
 function MinionGallery() {
   const [cur, setCur] = useState(0);
   const [fading, setFading] = useState(false);
-  const timer = useRef<<ReturnType<<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => { timer.current = setTimeout(next, 3200); return () => clearTimeout(timer.current); }, [cur]);
 
@@ -332,8 +332,8 @@ export default function Home() {
     }
   }
 
-  function focusInp(e: React.FocusEvent<<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
-  function blurInp(e: React.FocusEvent<<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
+  function focusInp(e: React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
+  function blurInp(e: React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
 
   return (
     <div style={{ background:"#050504", minHeight:"100vh", fontFamily:sans, color:"#fff", overflowX:"hidden" }}>
