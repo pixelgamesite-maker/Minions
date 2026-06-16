@@ -19,6 +19,12 @@ const MINIONS = [
   "/Mini-1.jpg","/Mini-2.jpg","/Mini-3.jpg",
   "/Mini-4.jpg","/Mini-5.jpg","/Mini-6.jpg",
   "/Mini-7.jpg","/Mini-8.jpg","/Mini-9.jpg",
+  "/Mini-10.jpg","/Mini-11.jpg","/Mini-12.jpg",
+  "/Mini-13.jpg","/Mini-14.jpg","/Mini-15.jpg",
+  "/Mini-16.jpg","/Mini-17.jpg","/Mini-18.jpg",
+  "/Mini-19.jpg","/Mini-20.jpg","/Mini-21.jpg",
+  "/Mini-22.jpg","/Mini-23.jpg","/Mini-24.jpg",
+  "/Mini-25.jpg","/Mini-26.jpg","/Mini-27.jpg",
 ];
 
 /* ── Minion images for each class (facing left via scaleX(-1)) ── */
