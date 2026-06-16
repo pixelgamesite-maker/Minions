@@ -835,7 +835,7 @@ export default function Home() {
                         Verify Link
                       </button>
                     )}
-                    {c3&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Link verified</p>}
+                    {c3&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Link verified</p>}
                   </FlipCard>
 
                   {/* Card 4 — Wallet (requires Enter to confirm) */}
