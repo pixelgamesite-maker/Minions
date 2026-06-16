@@ -6,12 +6,12 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY ?? ""
 );
 
-/* ── Fonts: Cormorant (editorial serif) + Space Grotesk (clean sans) ── */
+/* ── Fonts: Cormorant (editorial serif) + Segoe UI (clean sans) ── */
 const FONT_LINK =
-  "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Space+Grotesk:wght@400;500;600;700&display=swap";
+  "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap";
 
 const serif = "'Cormorant Garamond', Georgia, serif";
-const sans  = "'Space Grotesk', sans-serif";
+const sans  = "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
 const gold  = "#c9a84c";
 const goldLight = "#e2c97e";
 
@@ -79,7 +79,7 @@ function isValidUrl(u: string) {
 
 /* ── Scroll-reveal hook ── */
 function useScrollReveal(threshold = 0.12) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -176,11 +176,11 @@ function FlipCard({ index, icon, title, subtitle, done, locked, children, onFlip
   );
 }
 
-/* ── Minion gallery ── */
+/* ── Minion gallery — NO COUNTER ── */
 function MinionGallery() {
   const [cur, setCur] = useState(0);
   const [fading, setFading] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<<ReturnType<<typeof setTimeout>>();
 
   useEffect(() => { timer.current = setTimeout(next, 3200); return () => clearTimeout(timer.current); }, [cur]);
 
@@ -197,9 +197,7 @@ function MinionGallery() {
       <div style={{ width:"100%", maxWidth:"340px", aspectRatio:"1/1", borderRadius:"16px", overflow:"hidden", border:`1px solid ${gold}22`, background:"#0a0a08" }}>
         <img src={MINIONS[cur]} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", opacity: fading?0:1, transition:"opacity 0.28s ease" }} />
       </div>
-      <p style={{ fontFamily:sans, fontSize:"0.58rem", letterSpacing:"0.2em", color:`${gold}88`, margin:0 }}>
-        {String(cur+1).padStart(2,"0")} / {String(MINIONS.length).padStart(2,"0")}
-      </p>
+      {/* Dot indicators only — no counter */}
       <div style={{ display:"flex", gap:"6px" }}>
         {MINIONS.map((_,i) => (
           <button key={i} onClick={()=>fade(i)} style={{ width: i===cur?"20px":"5px", height:"5px", borderRadius:"3px", background: i===cur?gold:"rgba(255,255,255,0.15)", border:"none", padding:0, cursor:"pointer", transition:"all 0.3s ease" }} />
@@ -259,7 +257,7 @@ export default function Home() {
   const [twitter,   setTwitter]   = useState("");
   const [wallet,    setWallet]    = useState("");
   const [quoteUrl,  setQuoteUrl]  = useState("");
-  const [tasks,     setTasks]     = useState<Record<string,boolean>>({});
+  const [tasks,     setTasks]     = useState<<Record<string,boolean>>({});
   const [sending,   setSending]   = useState(false);
   const [success,   setSuccess]   = useState(false);
   const [err,       setErr]       = useState("");
@@ -274,10 +272,16 @@ export default function Home() {
 
   useEffect(()=>{ if(ready) localStorage.setItem("mn_v3",JSON.stringify({tasks,wallet,twitter,quoteUrl})); },[tasks,wallet,twitter,quoteUrl,ready]);
 
-  const c1 = twitter.trim().length > 1;
+  /* ── Task confirmation states ── */
+  const [twitterConfirmed, setTwitterConfirmed] = useState(false);
+  const [quoteConfirmed, setQuoteConfirmed] = useState(false);
+  const [walletConfirmed, setWalletConfirmed] = useState(false);
+
+  /* Only confirm on Enter key or explicit action, not while typing */
+  const c1 = twitterConfirmed && twitter.trim().length > 1;
   const c2 = !!tasks["like"];
-  const c3 = isValidUrl(quoteUrl);
-  const c4 = isValidEvm(wallet);
+  const c3 = quoteConfirmed && isValidUrl(quoteUrl);
+  const c4 = walletConfirmed && isValidEvm(wallet);
   const allDone = c1&&c2&&c3&&c4;
 
   async function submit() {
@@ -291,8 +295,8 @@ export default function Home() {
 
   function closeModal(){ setModalOpen(false); setSuccess(false); setErr(""); }
 
-  function focusInp(e:React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
-  function blurInp(e:React.FocusEvent<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
+  function focusInp(e:React.FocusEvent<<HTMLInputElement>){e.target.style.borderColor=`${gold}66`;}
+  function blurInp(e:React.FocusEvent<<HTMLInputElement>){e.target.style.borderColor=`${gold}22`;}
 
   return (
     <div style={{ background:"#050504", minHeight:"100vh", fontFamily:sans, color:"#fff", overflowX:"hidden" }}>
@@ -567,7 +571,7 @@ export default function Home() {
         </p>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1px", border:`1px solid ${gold}22`, borderRadius:"10px", overflow:"hidden", marginBottom:"28px" }}>
           {[["10,000","Supply"],["0.001 ETH","Price"],["Ethereum","Chain"],["OpenSea","Launchpad"]].map(([v,l],i)=>(
-            <div key={i} style={{ padding:"20px 18px", background:"rgba(255,255,255,0.02)", borderBottom: i<2?`1px solid ${gold}18`:"none", borderRight: i%2===0?`1px solid ${gold}18`:"none" }}>
+            <div key={i} style={{ padding:"20px 18px", background:"rgba(255,255,255,0.02)", borderBottom: i<<2?`1px solid ${gold}18`:"none", borderRight: i%2===0?`1px solid ${gold}18`:"none" }}>
               <p style={{ margin:0, fontFamily:serif, fontSize:"1.3rem", fontWeight:600, color:goldLight }}>{v}</p>
               <p style={{ margin:"3px 0 0", fontFamily:sans, fontSize:"0.58rem", letterSpacing:"0.16em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)" }}>{l}</p>
             </div>
@@ -642,7 +646,7 @@ export default function Home() {
           <div style={{ position:"absolute", left:"16px", top:0, bottom:0, width:"1px", background:`linear-gradient(180deg,${gold}44,${gold}11)` }} />
           <div style={{ display:"flex", flexDirection:"column", gap:"0" }}>
             {ROADMAP.map((r,i)=>(
-              <div key={r.phase} style={{ display:"flex", gap:"24px", paddingBottom: i<ROADMAP.length-1?"28px":"0", paddingLeft:"40px", position:"relative" }}>
+              <div key={r.phase} style={{ display:"flex", gap:"24px", paddingBottom: i<<ROADMAP.length-1?"28px":"0", paddingLeft:"40px", position:"relative" }}>
                 <div style={{ position:"absolute", left:"10px", top:"4px", width:"13px", height:"13px", borderRadius:"50%", border:`1px solid ${gold}`, background:"#050504", flexShrink:0 }} />
                 <div>
                   <p style={{ margin:0, fontFamily:sans, fontSize:"0.58rem", letterSpacing:"0.2em", textTransform:"uppercase", color:gold, marginBottom:"4px" }}>{r.phase}</p>
@@ -740,10 +744,45 @@ export default function Home() {
                 {/* 2×2 cards */}
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px", marginBottom:"16px" }}>
 
-                  {/* Card 1 — X Handle */}
+                  {/* Card 1 — X Handle (requires Enter to confirm) */}
                   <FlipCard index={0} icon="𝕏" title="Who Are You?" subtitle="Mission 01 / 04" done={c1} locked={false}>
                     <p style={{ margin:"0 0 7px", fontFamily:sans, fontSize:"0.62rem", color:`${gold}88`, letterSpacing:"0.1em", textTransform:"uppercase" }}>Your X handle</p>
-                    <input type="text" placeholder="@yourhandle" value={twitter} onChange={e=>setTwitter(e.target.value)} onClick={e=>e.stopPropagation()} style={inp} onFocus={focusInp} onBlur={blurInp} />
+                    <input 
+                      type="text" 
+                      placeholder="@yourhandle" 
+                      value={twitter} 
+                      onChange={e=>setTwitter(e.target.value)} 
+                      onKeyDown={e=>{ if(e.key==="Enter") setTwitterConfirmed(true); }}
+                      onClick={e=>e.stopPropagation()} 
+                      style={inp} 
+                      onFocus={focusInp} 
+                      onBlur={blurInp} 
+                    />
+                    {!c1 && twitter.trim().length > 1 && (
+                      <button 
+                        onClick={e=>{ e.stopPropagation(); setTwitterConfirmed(true); }}
+                        style={{
+                          marginTop:"8px",
+                          width:"100%",
+                          background:`${gold}22`,
+                          color:gold,
+                          border:`1px solid ${gold}44`,
+                          borderRadius:"4px",
+                          padding:"6px",
+                          fontFamily:sans,
+                          fontSize:"0.62rem",
+                          fontWeight:700,
+                          letterSpacing:"0.1em",
+                          textTransform:"uppercase",
+                          cursor:"pointer",
+                          transition:"all 0.2s",
+                        }}
+                        onMouseEnter={e=>{ (e.currentTarget as HTMLButtonElement).style.background=gold; (e.currentTarget as HTMLButtonElement).style.color="#050504"; }}
+                        onMouseLeave={e=>{ (e.currentTarget as HTMLButtonElement).style.background=`${gold}22`; (e.currentTarget as HTMLButtonElement).style.color=gold; }}
+                      >
+                        Confirm
+                      </button>
+                    )}
                     {c1 && <p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"5px 0 0" }}>Identity confirmed</p>}
                   </FlipCard>
 
@@ -756,26 +795,96 @@ export default function Home() {
                     {c2 && <p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"8px 0 0" }}>Missions done</p>}
                   </FlipCard>
 
-                  {/* Card 3 — Quote link */}
+                  {/* Card 3 — Quote link (requires Enter to confirm) */}
                   <FlipCard index={2} icon="↗" title="Verify Quote" subtitle="Mission 03 / 04" done={c3} locked={!c2}>
                     <p style={{ margin:"0 0 7px", fontFamily:sans, fontSize:"0.62rem", color:`${gold}88`, letterSpacing:"0.1em", textTransform:"uppercase" }}>Quote tweet link</p>
-                    <input type="url" placeholder="https://x.com/yourhandle/status/..." value={quoteUrl} onChange={e=>setQuoteUrl(e.target.value)} onClick={e=>e.stopPropagation()} style={inp} onFocus={focusInp} onBlur={blurInp} />
-                    {quoteUrl&&!isValidUrl(quoteUrl)&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Needs https://</p>}
-                    {c3&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Link verified</p>}
+                    <input 
+                      type="url" 
+                      placeholder="https://x.com/yourhandle/status/..." 
+                      value={quoteUrl} 
+                      onChange={e=>setQuoteUrl(e.target.value)} 
+                      onKeyDown={e=>{ if(e.key==="Enter" && isValidUrl(quoteUrl)) setQuoteConfirmed(true); }}
+                      onClick={e=>e.stopPropagation()} 
+                      style={inp} 
+                      onFocus={focusInp} 
+                      onBlur={blurInp} 
+                    />
+                    {quoteUrl&&!isValidUrl(quoteUrl)&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Needs https://</p>}
+                    {!c3 && isValidUrl(quoteUrl) && (
+                      <button 
+                        onClick={e=>{ e.stopPropagation(); setQuoteConfirmed(true); }}
+                        style={{
+                          marginTop:"8px",
+                          width:"100%",
+                          background:`${gold}22`,
+                          color:gold,
+                          border:`1px solid ${gold}44`,
+                          borderRadius:"4px",
+                          padding:"6px",
+                          fontFamily:sans,
+                          fontSize:"0.62rem",
+                          fontWeight:700,
+                          letterSpacing:"0.1em",
+                          textTransform:"uppercase",
+                          cursor:"pointer",
+                          transition:"all 0.2s",
+                        }}
+                        onMouseEnter={e=>{ (e.currentTarget as HTMLButtonElement).style.background=gold; (e.currentTarget as HTMLButtonElement).style.color="#050504"; }}
+                        onMouseLeave={e=>{ (e.currentTarget as HTMLButtonElement).style.background=`${gold}22`; (e.currentTarget as HTMLButtonElement).style.color=gold; }}
+                      >
+                        Verify Link
+                      </button>
+                    )}
+                    {c3&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Link verified</p>}
                   </FlipCard>
 
-                  {/* Card 4 — Wallet */}
+                  {/* Card 4 — Wallet (requires Enter to confirm) */}
                   <FlipCard index={3} icon="◈" title="Claim Wallet" subtitle="Mission 04 / 04" done={c4} locked={!c3}>
                     <p style={{ margin:"0 0 7px", fontFamily:sans, fontSize:"0.62rem", color:`${gold}88`, letterSpacing:"0.1em", textTransform:"uppercase" }}>EVM address</p>
-                    <input type="text" placeholder="0x..." value={wallet} onChange={e=>setWallet(e.target.value)} onClick={e=>e.stopPropagation()} style={inp} onFocus={focusInp} onBlur={blurInp} />
-                    {wallet&&!isValidEvm(wallet)&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Invalid address</p>}
-                    {c4&&<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Wallet confirmed</p>}
+                    <input 
+                      type="text" 
+                      placeholder="0x..." 
+                      value={wallet} 
+                      onChange={e=>setWallet(e.target.value)} 
+                      onKeyDown={e=>{ if(e.key==="Enter" && isValidEvm(wallet)) setWalletConfirmed(true); }}
+                      onClick={e=>e.stopPropagation()} 
+                      style={inp} 
+                      onFocus={focusInp} 
+                      onBlur={blurInp} 
+                    />
+                    {wallet&&!isValidEvm(wallet)&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:"#e05050", margin:"4px 0 0" }}>Invalid address</p>}
+                    {!c4 && isValidEvm(wallet) && (
+                      <button 
+                        onClick={e=>{ e.stopPropagation(); setWalletConfirmed(true); }}
+                        style={{
+                          marginTop:"8px",
+                          width:"100%",
+                          background:`${gold}22`,
+                          color:gold,
+                          border:`1px solid ${gold}44`,
+                          borderRadius:"4px",
+                          padding:"6px",
+                          fontFamily:sans,
+                          fontSize:"0.62rem",
+                          fontWeight:700,
+                          letterSpacing:"0.1em",
+                          textTransform:"uppercase",
+                          cursor:"pointer",
+                          transition:"all 0.2s",
+                        }}
+                        onMouseEnter={e=>{ (e.currentTarget as HTMLButtonElement).style.background=gold; (e.currentTarget as HTMLButtonElement).style.color="#050504"; }}
+                        onMouseLeave={e=>{ (e.currentTarget as HTMLButtonElement).style.background=`${gold}22`; (e.currentTarget as HTMLButtonElement).style.color=gold; }}
+                      >
+                        Confirm Wallet
+                      </button>
+                    )}
+                    {c4&&<<p style={{ fontFamily:sans, fontSize:"0.6rem", color:gold, margin:"4px 0 0" }}>Wallet confirmed</p>}
                     <p style={{ fontFamily:sans, fontSize:"0.58rem", color:"rgba(255,255,255,0.2)", margin:"6px 0 0", lineHeight:1.4 }}>Never share private keys or seed phrases.</p>
                   </FlipCard>
 
                 </div>
 
-                {err&&<p style={{ fontFamily:sans, fontSize:"0.78rem", color:"#e05050", margin:"0 0 10px", fontWeight:500 }}>{err}</p>}
+                {err&&<<p style={{ fontFamily:sans, fontSize:"0.78rem", color:"#e05050", margin:"0 0 10px", fontWeight:500 }}>{err}</p>}
 
                 <button onClick={submit} disabled={sending||!allDone} style={{
                   width:"100%",
