@@ -74,7 +74,8 @@ function isValidUrl(u: string) {
   } catch { return false; }
 }
 
-const X_URL = "https://x.com/theminionxyz";
+const X_URL = "https://x.com/theminionxyz";                           // Header follow link
+const PINNED_TWEET_URL = "https://x.com/theminionxyz/status/2067230883841544438";  // Mission tasks
 
 /* ── Scroll-reveal hook ── */
 function useScrollReveal(threshold = 0.12) {
@@ -860,7 +861,7 @@ export default function Home() {
 
                   {/* Card 2 — Like & Tag 2 friends */}
                   <FlipCard index={1} icon="↺" title="Like & Tag 2 Frens" subtitle="Mission 02 / 04" done={c2} locked={!c1}
-                    onFlip={()=>{ window.open(X_URL,"_blank"); setTimeout(()=>setTasks(p=>({...p,like:true})),800); }}>
+                    onFlip={()=>{ window.open(PINNED_TWEET_URL,"_blank"); setTimeout(()=>setTasks(p=>({...p,like:true})),800); }}>
                     <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.78rem", color:"rgba(255,255,255,0.5)", margin:0, lineHeight:1.5 }}>
                       {c2 ? "Like & comment confirmed." : 'Like the pinned post and tag 2 friends in the comments on X.'}
                     </p>
@@ -869,7 +870,7 @@ export default function Home() {
 
                   {/* Card 3 — Quote Pinned Tweet (opens X first, then shows link input) */}
                   <FlipCard index={2} icon="↗" title="Quote Pinned Tweet" subtitle="Mission 03 / 04" done={c3} locked={!c2}
-                    onFlip={()=>{ window.open(X_URL,"_blank"); }}>
+                    onFlip={()=>{ window.open(PINNED_TWEET_URL,"_blank"); }}>
                     {!c3 ? (
                       <>
                         <p style={{ fontFamily:serif, fontStyle:"italic", fontSize:"0.78rem", color:"rgba(255,255,255,0.5)", margin:0, lineHeight:1.5 }}>
