@@ -666,10 +666,10 @@ export default function Home() {
           onMouseLeave={e=>{(e.currentTarget as HTMLAnchorElement).style.background=gold;(e.currentTarget as HTMLAnchorElement).style.transform="";(e.currentTarget as HTMLAnchorElement).style.boxShadow=`0 8px 32px ${gold}33`;}}
         >
           <img src="/OpenSea-Emblem.png" alt="OpenSea" style={{ width:"20px", height:"20px", borderRadius:"4px", objectFit:"cover" }} />
-          <span>Mint on OpenSea</span>
+          <span>OpenSea</span>
         </a>
         <p style={{ fontFamily:sans, fontSize:"0.7rem", color:`${gold}66`, textAlign:"center", margin:"12px 0 0", letterSpacing:"0.1em" }}>
-          Mint link is live
+          View on OpenSea
         </p>
       </RevealSection>
 
