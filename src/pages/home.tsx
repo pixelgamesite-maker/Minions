@@ -656,15 +656,20 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <button disabled style={{
+        <a href="https://opensea.io/collection/minionsplay/overview" target="_blank" rel="noopener noreferrer" style={{
           width:"100%", fontFamily:sans, fontSize:"0.75rem", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase",
-          color:"rgba(255,255,255,0.25)", background:"rgba(255,255,255,0.04)", border:`1px solid rgba(255,255,255,0.08)`,
-          borderRadius:"6px", padding:"16px", cursor:"not-allowed",
-        }}>
-          COMING SOON
-        </button>
+          color:"#050504", background:gold, border:`1px solid ${gold}`,
+          borderRadius:"6px", padding:"16px", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"10px",
+          textDecoration:"none", transition:"all 0.2s ease", boxShadow:`0 8px 32px ${gold}33`,
+        }}
+          onMouseEnter={e=>{(e.currentTarget as HTMLAnchorElement).style.background=goldLight;(e.currentTarget as HTMLAnchorElement).style.transform="translateY(-2px)";(e.currentTarget as HTMLAnchorElement).style.boxShadow=`0 12px 40px ${gold}44`;}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLAnchorElement).style.background=gold;(e.currentTarget as HTMLAnchorElement).style.transform="";(e.currentTarget as HTMLAnchorElement).style.boxShadow=`0 8px 32px ${gold}33`;}}
+        >
+          <img src="/OpenSea-Emblem.png" alt="OpenSea" style={{ width:"20px", height:"20px", borderRadius:"4px", objectFit:"cover" }} />
+          <span>Mint on OpenSea</span>
+        </a>
         <p style={{ fontFamily:sans, fontSize:"0.7rem", color:`${gold}66`, textAlign:"center", margin:"12px 0 0", letterSpacing:"0.1em" }}>
-          Mint link: Coming soon
+          Mint link is live
         </p>
       </RevealSection>
 
